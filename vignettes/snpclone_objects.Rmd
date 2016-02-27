@@ -1,0 +1,76 @@
+---
+title: "snpclone objects"
+author: "Brian J. Knaus"
+date: "February 26, 2016"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{snpclone objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+Analysis of high-throughput sequencing projects typically results in a VCF file created by a variant caller (e.g., GATK, SAMtools, etc.).
+In order to analyze this data in R it needs to be read into memory in the R environment and converted into a data structure used by one of the R genetics packages.
+For the analysis of clonal or partially clonal organisms we recommend creating an object of class snpclone for analysis in poppr.
+
+
+
+## Creation
+
+
+```{r}
+# Load libraries
+library(vcfR)
+library(pinfsc50)
+
+# Determine file locations
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+
+# Read data into memory
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+
+# Convert to genlight object
+my.genlight <- vcfR2genlight(vcf)
+
+# Convert to snpclone object
+my.snpclone <- poppr::as.snpclone(my.genlight)
+```
+
+
+## Slots
+
+
+The snpclone object is based on, or extends, the genlight object.
+This means that in order to understand the snpclone object, we need to understand the genlight object.
+Detailed help can be found through the R help system.
+
+
+```{r}
+?genlight
+?snpclone
+```
+
+
+### genlight
+
+
+More information on objects of class genlight can be found in the genomics tutorial at the [adegenet tutorials](https://github.com/thibautjombart/adegenet/wiki/Tutorials) page.
+
+
+
+
+```{r}
+my.genlight
+```
+
+
+### snpclone
+
+
+
+
+
