@@ -58,7 +58,7 @@ Detailed help can be found through the R help system.
 ### genlight
 
 
-More information on objects of class genlight can be found in the genomics tutorial at the [adegenet tutorials](https://github.com/thibautjombart/adegenet/wiki/Tutorials) page.
+More information on objects of class genlight can be found in the 'genomics' tutorial at the [adegenet tutorials](https://github.com/thibautjombart/adegenet/wiki/Tutorials) page.
 
 
 

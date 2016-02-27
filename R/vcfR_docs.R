@@ -1,13 +1,11 @@
-#' vcfR_docs: Documentation for vcfR
+#' vcfRdocs: Documentation for vcfR
 #' 
 #'
-#' The foo package provides three categories of important functions:
-#' foo, bar and baz.
+#' The vcfRdocs package provides documentation and examples for vcfR
 #' 
-#' @section Foo functions:
-#' The foo functions ...
+#' @section section 1:
 #'
 #' @docType package
-#' @name foo
+#' @name vcfRdocs
 NULL
 #> NULL
