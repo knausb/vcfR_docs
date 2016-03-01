@@ -1,7 +1,7 @@
 ---
 title: "snpclone objects"
 author: "Brian J. Knaus"
-date: "February 26, 2016"
+date: "March 1, 2016"
 output:
   rmarkdown::html_vignette:
     toc: true
@@ -9,36 +9,63 @@ vignette: >
   %\VignetteIndexEntry{snpclone objects}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
+
 ---
 
 
-Analysis of high-throughput sequencing projects typically results in a VCF file created by a variant caller (e.g., GATK, SAMtools, etc.).
-In order to analyze this data in R it needs to be read into memory in the R environment and converted into a data structure used by one of the R genetics packages.
-For the analysis of clonal or partially clonal organisms we recommend creating an object of class snpclone for analysis in poppr.
 
 
 
-## Creation
+
+
+# The father, son and the snpclone object
 
 
 ```{r}
-# Load libraries
-library(vcfR)
-library(pinfsc50)
+extends('snpclone')
 
-# Determine file locations
-vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
-                        package = "pinfsc50")
+getClassDef("snpclone")
 
-# Read data into memory
-vcf <- read.vcfR(vcf_file, verbose = FALSE)
 
-# Convert to genlight object
-my.genlight <- vcfR2genlight(vcf)
 
-# Convert to snpclone object
-my.snpclone <- poppr::as.snpclone(my.genlight)
+#methods(snpclone)
+
+#showMethods(clases='snpclone')
+
+slotNames('snpclone')
+
+#showMethods('snpclone')
+
+methods(class='snpclone')
+
+showMethods(class='snpclone')
+
 ```
+
+
+
+
+gets
+sets
+
+
+indNames()
+pop()
+
+
+subsetting
+[]
+
+
+
+
+as.matrix()
+
+
+
+
+
+
 
 
 ## Slots
@@ -69,6 +96,33 @@ my.genlight
 
 
 ### snpclone
+
+
+
+```{r}
+my.snpclone
+
+hist(bitwise.dist(my.snpclone), col=3)
+
+pthresh <- mlg.filter(my.snpclone)
+
+cutoff_predictor(pthresh)
+
+
+missingno(my.snpclone)
+
+filter_stats(my.snpclone, plot=TRUE)
+
+
+mlg.filter(my.snpclone, threshold=0.05)
+mlg.filter(my.snpclone) <- 0.05
+
+mlg.id(my.snpclone)
+
+
+
+```
+
 
 
 

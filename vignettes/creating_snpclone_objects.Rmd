@@ -1,0 +1,126 @@
+---
+title: "Creating snpclone objects"
+author: "Brian J. Knaus and Zhian N. Kamvar"
+date: "February 26, 2016"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{creating snpclone objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+
+Analysis of high-throughput sequencing projects typically results in a VCF file created by a variant caller (e.g., GATK, SAMtools, etc.).
+In order to analyze this data in R it needs to be read into memory in the R environment and converted into a data structure used by one of the R genetics packages.
+For the analysis of clonal or partially clonal organisms we recommend creating an object of class snpclone for analysis in poppr.
+
+
+
+A first step in analysis in poppr is the creation of a data structure that is compatible with the poppr functions.
+An object of class snpclone is designed to hold variant data from multiple individuals and is bit-level encoded (i.e., not human readable, but fast) to handle large quantities of data.
+Here we begin with a matrix example, as most data have a matrix in them somewhere.
+We then use an example using VCF data, a common format used by high throughput variant calling software.
+
+
+## Matrix input
+
+The simplist path towards creation of a snpclone object is by starting with a data matrix.
+Here we create a simple matrix that includes four loci and three samples.
+Note that objects of class genlight, and therefore snpclone as well, support loci that are bialleleic (binary; include no more than 2 alleles).
+So our choices for allelic states are 0, 1 and 2.
+This can be interpreted as: 0, first homozygote; 1, heterozygote; 2, second homozygote.
+
+
+```{r}
+set.seed(1)
+x <- matrix(sample(0:2, size=12, replace=TRUE), ncol=4)
+colnames(x) <- paste("locus", 1:4, sep="_")
+rownames(x) <- paste("sample", 1:3, sep="_")
+x
+```
+
+
+Data matrices typically come in two flavors: samples in row or samples in columns.
+We'll need our samples to be in rows with the variants in columns.
+If you have the opposite your matrix can be converted with the transpose function (`t()`).
+
+
+Now that we have a data matrix we can convert it to an object of class snpclone.
+Because objects of class snpclone are based on objects of class genlight, we'll first create an object of class genlight that we'll then convert into snpclone.
+
+
+```{r}
+library(poppr)
+x <- as.genlight(x)
+x <- as.snpclone(x)
+x
+```
+
+
+Objects of class genlight, and therefore snpclone as well, can hold samples of different levels of ploidy.
+Although, each sample must be of a single ploidy.
+When we create our object a guess is made for us in order to determine ploidy.
+If we review above we see that sample_2 only included allelic states 0 and 1, so it is inferred to be a homozygote.
+We can force this to be a diploid manually.
+
+
+```{r}
+ploidy(x)[2] <- 2
+```
+
+
+
+
+## VCF input
+
+
+The output from variant callers from high throughput sequencing projects is typically in the variant call format (VCF).
+We can use the package vcfR to input and convert the data to a snpclone object.
+
+
+```{r}
+# Load libraries
+library(vcfR)
+library(pinfsc50)
+library(poppr)
+
+# Determine file locations
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+
+# Read data into memory
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+vcf
+```
+
+
+Raw VCF data typically requires some sort of quality filtering.
+This matter is covered in the documentation of vcfR.
+For now, we'll skip this step and move on to conversion to and snpclone object.
+
+
+```{r}
+# Convert to genlight object
+my.genlight <- vcfR2genlight(vcf)
+```
+
+
+Objects of class genlight support biallelic loci.
+VCF data frequently contains variants with more than two alleles.
+In order to fit the VCF data into the genlight object we must omit variants that include more than two alleles.
+This is done autmatically by the function *vcfR2genlight*, but it warns us that this was done for us.
+
+
+
+
+```{r}
+# Convert to snpclone object
+my.snpclone <- poppr::as.snpclone(my.genlight)
+my.snpclone
+```
+
+
+We now have an object of class snpclone and can move on to analysis steps.
+
