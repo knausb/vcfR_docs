@@ -12,11 +12,11 @@ vignette: >
 ---
 
 
-Objects of class snpclone are used to hold variant data from high-throughput sequencing projects for analisys in poppr.
+Objects of class snpclone are used to hold variant data from high-throughput sequencing projects for analysis in poppr.
 The R package poppr was designed for the analysis of clonal or partially clonal populations.
 The snpclone extends the object of class genlight from the adegenet package.
 It therefore includes much of the functionality of the genlight object.
-Before you can analyze you snpclone object, you'll have to learn how to work with it.
+Before you can analyze your snpclone object, you'll have to learn how to work with it.
 Here we explore how to work with objects of class snpclone.
 
 
@@ -51,14 +51,17 @@ my.snpclone
 The last command consists of the name of our snpclone object.
 This invokes the 'show' method for the class snpclone.
 The 'show' method summarizes the information contained in our object.
+Because the snpclone object 'extends' the genlight object, it also extends its methods.
+This is why the object declares itself to be a genlight object.
+It is indeed a genlight object, and more, as we'll see below.
 We'll see other 'methods' that act on objects of class snpclone throughout this document.
 
 
 
-# snpclone structure
+## snpclone structure
 
 The snpclone object is based on the genlight object.
-In programming terms the snpclone object extends the genlight object.
+In programming terms the snpclone object 'extends' the genlight object.
 This means that it has everything the genlight object has and more.
 We can see that it extends the genlight class, as well as any othre classes, with the `extends()` function.
 
@@ -98,7 +101,7 @@ Some of these are optional and not necessary.
 More detailed information can be found with `?snpclone`.
 
 
-This information can also be summarized all at once with the `getClassDef()` function.
+The above information can also be summarized all at once with the `getClassDef()` function.
 
 
 ```{r}
@@ -106,10 +109,16 @@ getClassDef("snpclone")
 ```
 
 
-## Methods
+Note that many of these slots are optional and do not necessarily need to be populated.
+For example, the 'pop' slot only needs to be populated if methods that make population level summaries are desired.
 
 
-Objects off class snpclone include methods that act on (show and set) the slots.
+## snpclone Methods
+
+
+Once you have your snpclone object, you'll want to begin to work with it.
+This typically means you'll need to learn the methods that act on an object.
+Objects of class snpclone include methods that act on ('show' and 'set') the slots.
 A first step in familiarizing yourself with these methods may be to query all of them.
 
 
@@ -143,10 +152,24 @@ indNames(my.snpclone)
 
 
 Methods are also defined to help subset the snpclone object.
+A method that may have appeared odd above is the bracket ('[').
+Users familiar with R will recognize the brackets as a way to subset vectors as well as matrices and matrix-like objects.
+This allows the programmer to provide a familiar behaviour to the objects they create.
+Objects of class snpclone may be subset using the brackets where values before a comma represent rows (samples) and values after the comma represent columns (variants).
+
+
+```{r}
+my.snpclone[1:4, 1:100]
+```
 
 
 
 ## Export from snpclone objects
+
+
+There are a number of ways to export data from snpclone objects, and they are covered elsewhere.
+One of the simplest methods is to convert the data to a matrix.
+This also provides a way to validate your data was converted to a snpclone object correctly: if you get it in, you should be able to get it out.
 
 
 ```{r}
@@ -155,41 +178,9 @@ x[1:4, 1:6]
 ```
 
 
-## Next section
+## More information
 
-
-
-
-
-gets
-sets
-
-
-indNames()
-pop()
-
-
-subsetting
-[]
-
-
-
-
-as.matrix()
-
-
-
-
-
-
-
-
-## Slots
-
-
-The snpclone object is based on, or extends, the genlight object.
-This means that in order to understand the snpclone object, we need to understand the genlight object.
-Detailed help can be found through the R help system.
+Documentation on genlight and snpclone objects can be found in their respective 'man' pages.
 
 
 ```{r}
@@ -198,49 +189,17 @@ Detailed help can be found through the R help system.
 ```
 
 
-### genlight
+Information about the adegenet and poppr packages can also be found in their man pages.
+
+
+```{r}
+?adegenet
+package?poppr
+```
 
 
 More information on objects of class genlight can be found in the 'genomics' tutorial at the [adegenet tutorials](https://github.com/thibautjombart/adegenet/wiki/Tutorials) page.
-
-
-
-
-```{r}
-my.genlight
-```
-
-
-### snpclone
-
-
-
-```{r}
-my.snpclone
-
-hist(bitwise.dist(my.snpclone), col=3)
-
-pthresh <- mlg.filter(my.snpclone)
-
-cutoff_predictor(pthresh)
-
-
-missingno(my.snpclone)
-
-filter_stats(my.snpclone, plot=TRUE)
-
-
-mlg.filter(my.snpclone, threshold=0.05)
-mlg.filter(my.snpclone) <- 0.05
-
-mlg.id(my.snpclone)
-
-
-
-```
-
-
-
+More information on adegenet can be found at the [adegenet wiki](https://github.com/thibautjombart/adegenet/wiki).
 
 
 

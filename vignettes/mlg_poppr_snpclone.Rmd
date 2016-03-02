@@ -1,0 +1,39 @@
+---
+title: "Analysis of multilocus genotypes and lineages in poppr using snpclone objects"
+author: "Brian J. Knaus"
+date: "March 2, 2016"
+output: html_document
+---
+
+
+
+
+
+```{r}
+my.snpclone
+
+hist(bitwise.dist(my.snpclone), col=3)
+
+pthresh <- mlg.filter(my.snpclone)
+
+cutoff_predictor(pthresh)
+
+
+missingno(my.snpclone)
+
+filter_stats(my.snpclone, plot=TRUE)
+
+
+mlg.filter(my.snpclone, threshold=0.05)
+mlg.filter(my.snpclone) <- 0.05
+
+mlg.id(my.snpclone)
+
+
+
+```
+
+
+
+
+
