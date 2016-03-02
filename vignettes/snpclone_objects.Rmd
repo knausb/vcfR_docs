@@ -1,6 +1,6 @@
 ---
-title: "snpclone objects"
-author: "Brian J. Knaus"
+title: "Objects of class snpclone"
+author: "Brian J. Knaus and Zhian N. Kamvar"
 date: "March 1, 2016"
 output:
   rmarkdown::html_vignette:
@@ -9,38 +9,154 @@ vignette: >
   %\VignetteIndexEntry{snpclone objects}
   %\VignetteEngine{knitr::rmarkdown}
   %\usepackage[utf8]{inputenc}
-
 ---
 
 
+Objects of class snpclone are used to hold variant data from high-throughput sequencing projects for analisys in poppr.
+The R package poppr was designed for the analysis of clonal or partially clonal populations.
+The snpclone extends the object of class genlight from the adegenet package.
+It therefore includes much of the functionality of the genlight object.
+Before you can analyze you snpclone object, you'll have to learn how to work with it.
+Here we explore how to work with objects of class snpclone.
+
+
+## Creation
+
+The creation of snpclone objects is covered elsewhere.
+Here we use the pinfsc50 dataset read in as a VCF file and converted to an object of class snpclone.
+
+
+```{r}
+# Load libraries
+library(vcfR)
+library(pinfsc50)
+library(poppr)
+
+# Determine file locations
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+
+# Read data into memory
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+
+# Convert to genlight object
+my.genlight <- vcfR2genlight(vcf)
+
+# Convert to snpclone object
+my.snpclone <- poppr::as.snpclone(my.genlight)
+my.snpclone
+```
+
+
+The last command consists of the name of our snpclone object.
+This invokes the 'show' method for the class snpclone.
+The 'show' method summarizes the information contained in our object.
+We'll see other 'methods' that act on objects of class snpclone throughout this document.
 
 
 
+# snpclone structure
 
-
-# The father, son and the snpclone object
+The snpclone object is based on the genlight object.
+In programming terms the snpclone object extends the genlight object.
+This means that it has everything the genlight object has and more.
+We can see that it extends the genlight class, as well as any othre classes, with the `extends()` function.
 
 
 ```{r}
 extends('snpclone')
-
-getClassDef("snpclone")
-
-
-
-#methods(snpclone)
-
-#showMethods(clases='snpclone')
-
-slotNames('snpclone')
-
-#showMethods('snpclone')
-
-methods(class='snpclone')
-
-showMethods(class='snpclone')
-
 ```
+
+
+This demonstrates that the snpclone class has superclass of genlight.
+This can also be seen with the `selectSuperClasses()` function.
+
+
+```{r}
+selectSuperClasses('snpclone')
+```
+
+
+Knowing about superclasses is important when looking for documentation on a class.
+For example, the documentation for the snpclone class may only include documentation for its extensions to the genlight object.
+More information may be found in the documentation for the genlight class.
+But you need to know to look there before you can.
+
+
+Objects of class snpclone contain data.
+This data is contained in 'slots' of the object.
+Before we can access or set any of the slots, we need to know what slots are available.
+
+
+```{r}
+slotNames('snpclone')
+```
+
+
+Here we see the names of the available slots.
+Some of these are optional and not necessary.
+More detailed information can be found with `?snpclone`.
+
+
+This information can also be summarized all at once with the `getClassDef()` function.
+
+
+```{r}
+getClassDef("snpclone")
+```
+
+
+## Methods
+
+
+Objects off class snpclone include methods that act on (show and set) the slots.
+A first step in familiarizing yourself with these methods may be to query all of them.
+
+
+```{r}
+methods(class='snpclone')
+```
+
+
+This displays methods associated with the snpclone class.
+Note that some methods include the assignment operator (`method<-`).
+This means you should be able to set the values of this slot.
+Slots that do not include the assignment operator are only available for viewing.
+For example, if we wanted to see the names of our samples we would query `indNames()`.
+
+
+```{r}
+indNames(my.snpclone)
+```
+
+
+If we want to change a name we can use the brackets to subset the data.
+
+
+```{r}
+indNames(my.snpclone)[2] <- "DDR7602_us1"
+indNames(my.snpclone)
+```
+
+
+## Subsetting snpclone objects
+
+
+Methods are also defined to help subset the snpclone object.
+
+
+
+## Export from snpclone objects
+
+
+```{r}
+x <- as.matrix(my.snpclone)
+x[1:4, 1:6]
+```
+
+
+## Next section
+
 
 
 
