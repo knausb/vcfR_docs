@@ -1,11 +1,15 @@
 Package: vcfRdocs
 Type: Package
 Title: Documentation For VcfR
-Version: 1.0
+Version: 1.0.0
 Date: 2016-02-26
 Author: Brian J. Knaus
 Maintainer: Brian J. Knaus <briank.lists@gmail.com>
-Description: More details about what the package does. See
-            <http://http://cran.r-project.org/doc/manuals/r-release/R-exts.html#The-DESCRIPTION-file> for details
-            on how to write this part.
+Description: Documentation and examples for vcfR
 License: GPL (>= 2) | file LICENSE
+Imports:
+    adegenet,
+    pinfsc50,
+    poppr,
+    vcfR
+Suggests:
