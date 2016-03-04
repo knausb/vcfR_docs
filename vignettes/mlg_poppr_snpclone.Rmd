@@ -2,7 +2,9 @@
 title: "Analysis of multilocus genotypes and lineages in poppr using a snpclone object"
 author: "Brian J. Knaus"
 date: "March 2, 2016"
-output: html_document
+output:
+  html_document:
+    toc: true
 ---
 
 
@@ -59,13 +61,93 @@ my.snpclone
 ```
 
 
+## Setting the strata slot
+
+The strata slot on genlight and snpclone objects is intended to hold hierarchical population information.
+For example, if you sampled from a plot within a field that is within a county and a state you could have columns for each of these hierarchical levels.
+This can be seen as a place to store the hierarchical strata you will you as well as strata you may think you want to use but are not sure of yet.
+
+
+The strata slot is really a sort of holding place for information to be populated into the pop slot.
+This is intended to allow for differing parameterization of the pop slot to be made in a rapid and easy manner.
+The pop slot can be set manually by providing a vector that is the same length as the number of individuals in the sample.
+Or it can be setPop method.
+We'll go over this step by step.
+
+
+First we'll need to set the strata slot.
+By default, it appears to be set to NULL.
+
+
+```{r}
+strata(my.snpclone)
+```
+
+
+We'll create a data.frame with the same number of rows as we have samples and as many columns as we have levels of hierarchy.
+For this example we only have one level of hierarchy.
+
+
+```{r}
+strata.df <- data.frame( matrix( ncol=1, nrow=length( indNames(my.snpclone) ) ) )
+rownames(strata.df) <- indNames(my.snpclone)
+colnames(strata.df) <- 'Pop'
+strata.df$Pop[c(2,4,8,11,14)] <- 'US1'
+strata.df$Pop[c(1,3,6,13,16)] <- 'US'
+strata.df$Pop[c(5,9,10,12,17,18)] <- 'Pinf'
+strata.df$Pop[c(7)] <- 'MX'
+strata.df$Pop[15] <- 'Pmir'
+```
+
+
+We can now set teh strata slot with this data.frame.
+
+
+```{r}
+strata(my.snpclone) <- strata.df
+```
+
+
+Once we've populated the strata slot, we can use a formula, based on the column names of the data.frame used for the strata slot, to populate the pop slot.
+
+
+```{r}
+setPop(my.snpclone) <- ~Pop
+```
+
+
+This is a fairly simplistic example with only one level of hierarchy.
+If we had more levels of hierarchy we could imagine a nested design.
+
+
+```{r, eval=FALSE}
+setPop(my.snpclone) <- ~State/County/Field/Plot
+```
+
+Or, perhaps:
+
+```{r, eval=FALSE}
+setPop(my.snpclone) <- ~Species/Metapopulation/Population
+```
+
+
+One of the feature of using formulae to populate the pop slot is that it manages the formating of the hierarchical terms for you.
+More information on formulae in R can be found at its man page.
+
+
+```{r}
+?formula
+```
+
+
+
 ## High throughput MLG
 
 
 High throughput genotyping results in thousands, tens of thousands, hundreds of thousand or more variants.
 This means that even within clones we expect to observe some level of variation.
 Some fraction of this observed variation may be real somatic mutation.
-A larger fraction is more likely to result from genotyping error.
+A larger fraction is more likely the result of genotyping error.
 Two forms of mlg appear relevant to high throughput sequencing assays: a distance threshold ("contracted") or a custom specification defined by the user ("custom").
 
 
@@ -82,18 +164,45 @@ The default behaviour appear to be that each sample is assigned to a unique mlg.
 Below we'll learn how to set this slot to something that is (hopefully) of biological relevance.
 
 
-## Filtered ("contracted") mlg
+### Filtered ("contracted") mlg
 
 
-```{r}
-mlg.filter(my.snpclone, threshold=0.1, distance=bitwise.dist)
-```
+A filtered mlg uses a distance based threshold to call all individuals that are less than that threshold of distance apart as the same mlg.
+There are a few ways to determine this threshold.
 
+
+A rather simplistic attempt to determine a threshold for mlg calling is to create a histogram of distances and look for modality.
+Here we use the `bitwise.dist()` function that was designed specifically to deal with the bitwise encoded data found in genlight and snpclone objects.
 
 
 ```{r, fig.align='center'}
+hist( bitwise.dist(my.snpclone), col="forestgreen", xlab="Proportion of loci different", breaks=seq(0,0.5,by=0.003) )
+```
+
+
+We can see a break in the data at difference of 20% of the loci.
+This threshold can be used to sort the samples into mlgs using the `mlg.filter()` method.
+Adjusting the widths of the bins (using the `by=0.01` parameter) may elucidate other structure in the dataset.
+
+
+```{r}
+mlg.filter(my.snpclone, threshold=0.2, distance=bitwise.dist)
+```
+
+
+Thsi is successful at seperating the one sample that is a different species (*P. mirabilis*) from the rest of the sample (*P. infestans*).
+Note that the sample size is 18, so there are 17 comparisons among this one sample and the 17 other samples.
+This is why the density above 0.3 is greater than one, even though this threshold only seperates one individual.
+It also explains why the density is greater than 17 below the threshold of 0.2.
+
+
+
+#### Minimum spanning networks
+
+
+```{r, fig.align='center', fig.width=12, fig.height=8}
 set.seed(1)
-g1 <- poppr.msn(gid=my.snpclone, distmat=bitwise.dist(my.snpclone), threshold = 0.1, include.ties = TRUE, 
+g1 <- poppr.msn(gid=my.snpclone, distmat=bitwise.dist(my.snpclone), threshold = 0.08, include.ties = TRUE, 
                 vertex.label.color = "firebrick", vertex.label.font = 2)
 ```
 
@@ -103,6 +212,10 @@ g1 <- poppr.msn(gid=my.snpclone, distmat=bitwise.dist(my.snpclone), threshold = 
 ```{r, fig.align='center'}
 mlg.table(my.snpclone)
 ```
+
+
+### Custom mlg
+
 
 
 
@@ -148,6 +261,15 @@ mlg.id(my.snpclone)
 
 
 ```
+
+
+
+
+## Glossary
+
+Multilocus genotype
+
+Clone correction
 
 
 
