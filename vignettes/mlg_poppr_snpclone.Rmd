@@ -245,6 +245,19 @@ Underlying mlg.filter are three algorithms that decide what genotypes go togethe
 * average neighbor (UPGMA)
 
 
+These algorithms are documented in the poppr vignette on 'Analysis of Multilocus Genotypes and Lineages in poppr.'
+
+
+```{r, eval=FALSE}
+RShowDoc('mlg', package='poppr')
+```
+
+
+In the subsection titled 'Tie breakers ' of the section 'Filtered (“contracted”).'
+These algorithms should behave the same for high locus datasets as in the data set in the vignette, so the reader is referred to the original vignette.
+Here we simply demonstrate that we can recreate the plot produced by `filter_stats()`.
+
+
 ```{r, fig.align='center'}
 pinf_filtered <- filter_stats(my.snpclone, distance = bitwise.dist, plot = TRUE)
 ```
@@ -252,39 +265,47 @@ pinf_filtered <- filter_stats(my.snpclone, distance = bitwise.dist, plot = TRUE)
 
 
 
-## Section
+## Our snpclone object
 
 
 ```{r}
 my.snpclone
-
-hist(bitwise.dist(my.snpclone), col=3)
-
-pthresh <- mlg.filter(my.snpclone)
-
-cutoff_predictor(pthresh)
-
-
-missingno(my.snpclone)
-
-filter_stats(my.snpclone, plot=TRUE)
-
-
-mlg.filter(my.snpclone, threshold=0.05)
-mlg.filter(my.snpclone) <- 0.05
-
-mlg.id(my.snpclone)
-
-
-
 ```
+
+
+Notice that in the mlg slot it indicates the threshold ([t]), distance metric ([d]) and algorithm ([a]) used.
+
+
+```{r}
+mlg.id(my.snpclone)
+```
+
+
+## Diversity statistics
+
+
+
+
+```{r}
+tab <- mlg.table(my.snpclone, plot=FALSE)
+diversity_stats(tab)
+```
+
+
+## Clone correction
 
 
 
 
 ## Glossary
 
+
 Multilocus genotype
+
+
+
+Multilocus lineage
+
 
 Clone correction
 
