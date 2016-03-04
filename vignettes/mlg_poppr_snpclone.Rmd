@@ -1,10 +1,17 @@
 ---
 title: "Analysis of multilocus genotypes and lineages in poppr using a snpclone object"
 author: "Brian J. Knaus"
-date: "March 2, 2016"
+date: "`r Sys.Date()`"
 output:
-  html_document:
+  rmarkdown::html_vignette:
     toc: true
+vignette: >
+  %\VignetteIndexEntry{Subset to one chromosome}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
 ---
 
 

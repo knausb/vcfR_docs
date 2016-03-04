@@ -5,7 +5,7 @@ Version: 1.0.0
 Date: 2016-02-26
 Author: Brian J. Knaus
 Maintainer: Brian J. Knaus <briank.lists@gmail.com>
-Description: Documentation and examples for vcfR
+Description: Documentation and examples for vcfR. Workflows on how to analyze variant data.
 License: GPL (>= 2) | file LICENSE
 Imports:
     adegenet,
@@ -13,3 +13,5 @@ Imports:
     poppr,
     vcfR
 Suggests:
+    knitr
+VignetteBuilder: knitr

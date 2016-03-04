@@ -8,7 +8,4 @@
 \description{
 The vcfRdocs package provides documentation and examples for vcfR
 }
-\section{section 1}{
-
-}
 
