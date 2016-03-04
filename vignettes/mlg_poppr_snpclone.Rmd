@@ -200,6 +200,10 @@ It also explains why the density is greater than 17 below the threshold of 0.2.
 #### Minimum spanning networks
 
 
+We can also use minimum spanning networks to visualize how a threshold may affect the inference of structure in our data.
+The function `poppr.msn()` includes a threshold to aggregate samples into mlgs.
+
+
 ```{r, fig.align='center', fig.width=12, fig.height=8}
 set.seed(1)
 g1 <- poppr.msn(gid=my.snpclone, distmat=bitwise.dist(my.snpclone), threshold = 0.08, include.ties = TRUE, 
@@ -207,11 +211,24 @@ g1 <- poppr.msn(gid=my.snpclone, distmat=bitwise.dist(my.snpclone), threshold = 
 ```
 
 
+In our minimum spanning network each node is a mlg.
+The diameter of each node is proportional to the number of samples included in the node.
+The nodes are colored by pie charts that colored according to the population membership of the samples.
+The widths of the edges are proportional to the similarity among mlgs where mlgs that have a high similarity are connected by a wide edge and mlgs that have a low similarity are connected by a narrow edge.
+
 
 
 ```{r, fig.align='center'}
+mlg.filter(my.snpclone) <- 0.08
 mlg.table(my.snpclone)
 ```
+
+
+
+Note that teh threshold used here is sensitive to what measure of distance used.
+Different distance metrics have different ranges and may scale differently as well.
+One distance metric shouldbe used in order to provide comparisons among these methods.
+If a new distance metric is desired, all of teh above analyses should be redone.
 
 
 ### Custom mlg
