@@ -307,11 +307,13 @@ diversity_stats(tab)
 ## Glossary
 
 
-Multilocus genotype
+Multilocus genotype (MLG): Individuals that are identical in state across a panel of molecular markers.
 
 
 
-Multilocus lineage
+Multilocus lineage (MLL): clusters of multilocus genotypes that belong to the same genet.
+This cluster of individuals are related due to their being the product of a, predumedly, single event of sexual reproduction.
+These may differ from one another due to somatic mutation and/or genotyping error.
 
 
 Clone correction
