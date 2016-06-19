@@ -1,0 +1,80 @@
+---
+title: "Chromo plots"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Visualization 2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+## Chromo plots
+
+
+The chromo plot was created in order to visualize VCF data as plotted along a single chromosome.
+Depending on the state of the genome you're working on, a 'chromosome' may actually be a 'scaffold', 'supercontig' or simply a 'contig.'
+For the purposes of this discussion a 'chromosome' is simply a single sequence used as a reference in order to call variants.
+
+
+The 'chromoqc' plot was introduced in other documentation.
+This plot is actually a wrapper to the 'chromo' plot.
+Because it is a wrapper it is a simplification of the 'chromo' plot.
+Also because it is a wrapper, it lacks some of the flexibility of the 'chromo' plot.
+Here we will take a closer look at the 'chromoqc' plot and then extend this knowledge to create the more customized 'chromo' plot.
+
+
+## Chromoqc
+
+
+In previous documentation we have rendered a 'chromoqc' plot.
+Here we reproduce this plot as a starting point for our discussion.
+
+
+```{r create chrom}
+library(vcfR)
+
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz", package = "pinfsc50")
+dna_file <- system.file("extdata", "pinf_sc50.fasta", package = "pinfsc50")
+gff_file <- system.file("extdata", "pinf_sc50.gff", package = "pinfsc50")
+
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+dna <- ape::read.dna(dna_file, format = "fasta")
+gff <- read.table(gff_file, sep="\t", quote="")
+
+chrom <- create.chromR(name="Supercontig", vcf=vcf, seq=dna, ann=gff, verbose=FALSE)
+chrom <- masker(chrom, min_DP = 300, max_DP = 700)
+chrom <- proc.chromR(chrom, verbose = FALSE)
+```
+
+
+
+```{r, fig.width=7, fig.height=7, fig.align='center'}
+chromoqc(chrom)
+```
+
+
+This plot can be seen as seven horizontal plots.
+Five of these plots include marginal box and whisker plots.
+Two of these plots (at the bottom) lack marginal box and whisker plots and are half the height of the other plots.
+The organization of this plot was created with the function 'graphics::layout()' which provides for multi-panel plots where each panel is not of the same dimensions.
+The manual page for this function provides details.
+
+
+Each of these panels was created with the function 'dr.plot.'
+In order to learn how to make a 'chromo' plot we need to learn how to make each of the panels of a 'chromo' plot.
+And in order to understand how each of these panels are created, we need to understand the 'dr.plot' function.
+
+
+## dr.plot
+
+
+
+## chromo plot
+
+
+
+
