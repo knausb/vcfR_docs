@@ -12,6 +12,11 @@ vignette: >
 ---
 
 
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=7)
+knitr::opts_chunk$set(fig.align = 'center')
+```
+
 ## Chromo plots
 
 
@@ -20,7 +25,7 @@ Depending on the state of the genome you're working on, a 'chromosome' may actua
 For the purposes of this discussion a 'chromosome' is simply a single sequence used as a reference in order to call variants.
 
 
-The 'chromoqc' plot was introduced in other documentation.
+The `chromoqc()` plot was introduced in other documentation.
 This plot is actually a wrapper to the 'chromo' plot.
 Because it is a wrapper it is a simplification of the 'chromo' plot.
 Also because it is a wrapper, it lacks some of the flexibility of the 'chromo' plot.
@@ -64,17 +69,165 @@ The organization of this plot was created with the function 'graphics::layout()'
 The manual page for this function provides details.
 
 
-Each of these panels was created with the function 'dr.plot.'
-In order to learn how to make a 'chromo' plot we need to learn how to make each of the panels of a 'chromo' plot.
-And in order to understand how each of these panels are created, we need to understand the 'dr.plot' function.
+Each of these panels was created with the function `dr.plot()`.
+In order to learn how to make a 'chromo' plot we need to learn how to make each of the panels of a `chromo()` plot.
+And in order to understand how each of these panels are created, we need to understand the `dr.plot()` function.
 
 
 ## dr.plot
 
 
+The function `dr.plot()` creates plots of dots and rectangles.
+The dots are used to create dot plots along a chromosome.
+The rectangles are used to create bar charts along a chromosome.
+We'll begin by working with dot plots.
+
+
+### Dot plots
+
+
+The dr.plot function can accomodate a flexible number of data.
+For dot plots this is facilitated by using a numeric matrix to specify the coordinates.
+The first column of this matrix should be the x-coordinate.
+This frequently comes from teh POS column in VCF data.
+Every subsequent column can be a different data type.
+For our data we'll use information from the 'var.info' slot of our example data.
+We have some values that are rather large so we'll prune these data to only include values below 1,000.
+
+
+```{r}
+dot1 <- as.matrix( chrom@var.info[,c(2,3,4)] )
+dot1 <- dot1[ dot1[,3] < 1000, ]
+head(dot1)
+```
+
+
+We see that the first column is the position (POS) and we have two subsequent columns of numeric data.
+We can plot the data by selecting the first two columns and using that as the dmat (dot matrix) argument for dr.plot.
+
+
+```{r}
+dr.plot( dmat = dot1[,1:2], 
+         chrom.e = 100001,
+         dcol=c(rgb(34,139,34, maxColorValue = 255))
+         )
+```
+
+
+We can plot two levels of data by using all three columns in our call.
+
+
+```{r, fig.width=7, fig.align='center'}
+dr.plot( dmat = dot1, 
+         chrom.e = 100001,
+         dcol=c(rgb(34,139,34, maxColorValue = 255), rgb(0,206,209, maxColorValue = 255)) 
+         )
+```
+
+
+Because we've chosen to plot the data from different columns with different colors we need to pass a vector of colors as our argument to dcol.
+
+
+### Rectangle plots
+
+
+Barcharts are frequently used to summarize information.
+In the context of the dr.plot barcharcts are created using matrices of coordinates.
+These matrices consist of coordinates for the xleft, ybottom, xright and ytop of each rectangle.
+This was modeled after `rect()`.
+
+
+```{r, fig.width=7, fig.align='center'}
+mat1 <- cbind(chrom@win.info[,'start'],
+              0, 
+              chrom@win.info[,'end'], 
+              chrom@win.info[,'variants']
+              )
+head(mat1)
+```
+
+
+We can now use this matrix in our call to `dr.plot()` to create our graphic.
+
+
+```{r, fig.width=7, fig.align='center'}
+dr.plot( rlst = mat1, chrom.e = 100001 )
+```
+
+
+In order to attain flexibility in the amount of data we can use for a rectangle plot a list of matrices can be passed to `dr.plot()` as the argument to `rlst`.
+We'll first need to create a couple more matrices to use this example.
+
+
+```{r}
+mat2 <- cbind(chrom@win.info[,'start'],
+              0, 
+              chrom@win.info[,'end'],
+              rowSums(chrom@win.info[,c('A', 'T')])
+)
+
+mat3 <- cbind(chrom@win.info[,'start'],
+              rowSums(chrom@win.info[,c('A', 'T')]),
+              chrom@win.info[,'end'],
+              rowSums(chrom@win.info[,c('A', 'C', 'G', 'T')])
+)
+```
+
+
+
+
+
+
+
+```{r, fig.width=7, fig.align='center'}
+dr.plot( rlst = list(mat2, mat3), chrom.e = 100001 )
+```
+
+
+
+
+
+
+
+```{r, fig.width=7, fig.align='center'}
+dr.plot( dmat = dot1,
+         rlst = list(mat2, mat3), 
+         chrom.e = 100001,
+         dcol=c(rgb(34,139,34, maxColorValue = 255), rgb(0,206,209, maxColorValue = 255)) 
+         )
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+More information about the dr.plot can be found in it's manual page.
+
+
+```{r, eval=FALSE}
+?dr.plot
+```
+
+
+Ellipses.
+
+
 
 ## chromo plot
 
+
+
+```{r}
+
+```
 
 
 

@@ -76,6 +76,7 @@ dp[dp2 < 0] <- NA
 dp2 <- sweep(dp, MARGIN=2, FUN = "-", sums[2,])
 dp[dp2 > 0] <- NA
 #dp[dp < 4] <- NA
+is.na( vcf@gt[,-1][ is.na(dp) ] ) <- TRUE
 ```
 
 
