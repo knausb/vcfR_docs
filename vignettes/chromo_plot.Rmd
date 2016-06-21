@@ -184,12 +184,13 @@ dr.plot( rlst = list(mat2, mat3), chrom.e = 100001 )
 ```
 
 
+### Dot and rectangle plots
 
 
+Now that we know how to create dot plots and rectangle plots we can combine this knowledge to create plots with both elements.
 
 
-
-```{r, fig.width=7, fig.align='center'}
+```{r}
 dr.plot( dmat = dot1,
          rlst = list(mat2, mat3), 
          chrom.e = 100001,
@@ -197,15 +198,6 @@ dr.plot( dmat = dot1,
          )
 
 ```
-
-
-
-```{r}
-
-```
-
-
-
 
 
 
@@ -217,17 +209,154 @@ More information about the dr.plot can be found in it's manual page.
 ```
 
 
-Ellipses.
+Note that the ellipses are part of the funciton definition.
+This means that other parameters, including ones I have not considered, can be included.
+For example, using `xlim()` will allow you to focus the plot on a particular region.
+
+
+```{r}
+dr.plot( dmat = dot1,
+         rlst = list(mat2, mat3), 
+         chrom.e = 100001,
+         dcol=c(rgb(34,139,34, maxColorValue = 255), rgb(0,206,209, maxColorValue = 255)),
+         xlim = c(3e4, 6e4)
+         )
+
+```
+
 
 
 
 ## chromo plot
 
 
+A basic chromo plot can be creates with just an object of class `chromR`.
+Here we use our example data that includes a reference (sequence data), annotations and variants (from the VCF file).
+
 
 ```{r}
-
+chromo( chrom, boxp = TRUE )
 ```
 
 
+This provides four tracks: annotations, nucleotides, nucleotide content and variant incidence.
+We can compare this to the `chromoqc` plot presented above.
+This can be seen as a foundation upon which to include other forms of data as additional panes.
+Up to three additional panes can be included by using the argument drlist1, drlist2 or drlist3.
+The argument used for drlist is a names list that can include the values title, dmat, rlist, dcol, rcol, rbcol and bwcol.
+
+* The `title` is a name for the plot.
+* The parameter `dmat` is a matrix of dot coordinates where the first column is the position (POS) and each subsequent column are y-coordinates.
+* `rlist` is a list of rectangle coordinates.
+* `dcol` is a vector of colors for the dots.
+* `rcol` is a vector of colors for the rectangles.
+* `rbcol` is a vector of colors to be used for the rectangle borders.
+* `bwcol` is a vector of colors to be used for the marginal box and whisker plot.
+
+
+In order to create our drlist we'll start with a matrix of rectangle coordinates.
+
+
+```{r}
+rlst1 <- cbind( gff[ seq(1,23, by=2) , 4 ],
+                0, 
+                gff[ seq(1,23, by=2) , 5 ],
+                500
+               )
+head(rlst1)
+```
+
+
+Next we'll convert our matrix into  a list and include it as part of our drlist.
+
+
+```{r}
+rlist <- list(rlst1)
+myList1 <- list(title = "Track1",
+                dmat  = chrom@var.info[,2:4],
+                rlst = rlst1,
+                rcol=4,
+                bwcol=1:2
+                )
+```
+
+
+Now we can use this list as an argument in our call to `chromo()`.
+
+
+```{r, fig.height=5}
+chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1  )
+```
+
+
+We can create additional panes by adding data to drlist2.
+Here we'll just reuse the data from drlist1 as an example.
+
+
+```{r, fig.height=5}
+chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1, drlist2 = myList1  )
+```
+
+
+In theory just about any sort of data can be used.
+
+
+```{r}
+dp <- extract.gt(chrom, element = 'DP', as.numeric = TRUE)
+myList1 <- list(title = colnames(dp)[1],
+                dmat  = cbind(chrom@var.info[,2], dp[,1]),
+                dcol="#0000ff44"
+                )
+```
+
+
+
+```{r, fig.height=5}
+chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1)
+```
+
+
+We can include multiple samples in on plot by adding columns to our dot matrix.
+
+
+```{r}
+myList1 <- list(title = paste(colnames(dp)[1:3], collapse=","),
+                dmat  = cbind(chrom@var.info[,2], dp[,1:3]),
+                dcol=c("#8DD3C744", "#FB807244", "#BEBADA44")
+                )
+```
+
+
+
+```{r, fig.height=5}
+chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1)
+```
+
+
+Or plot them as separate panes.
+
+
+```{r}
+myList1 <- list(title = paste(colnames(dp)[1], collapse=","),
+                dmat  = cbind(chrom@var.info[,2], dp[,1]),
+                dcol=c("#8DD3C744")
+                )
+myList2 <- list(title = paste(colnames(dp)[2], collapse=","),
+                dmat  = cbind(chrom@var.info[,2], dp[,2]),
+                dcol=c("#FB807244")
+                )
+myList3 <- list(title = paste(colnames(dp)[3], collapse=","),
+                dmat  = cbind(chrom@var.info[,2], dp[,3]),
+                dcol=c("#BEBADA44")
+                )
+```
+
+
+```{r, fig.height=5}
+chromo( chrom, boxp = TRUE , chrom.e = chrom@len, 
+        drlist1 = myList1,
+        drlist2 = myList2,
+        drlist3 = myList3
+        )
+```
 
