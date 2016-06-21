@@ -343,13 +343,15 @@ myList1 <- list(title = paste(colnames(dp)[1], collapse=","),
                 )
 myList2 <- list(title = paste(colnames(dp)[2], collapse=","),
                 dmat  = cbind(chrom@var.info[,2], dp[,2]),
-                dcol=c("#FB807244")
+                dcol=c("#FB807211"),
+                bwcol=c("#FB8072")
                 )
 myList3 <- list(title = paste(colnames(dp)[3], collapse=","),
                 dmat  = cbind(chrom@var.info[,2], dp[,3]),
                 dcol=c("#BEBADA44")
                 )
 ```
+
 
 
 ```{r, fig.height=5}
@@ -359,4 +361,10 @@ chromo( chrom, boxp = TRUE , chrom.e = chrom@len,
         drlist3 = myList3
         )
 ```
+
+
+Management of rectangle and dot plots can involve a lot of manual steps.
+But this can provide a lot of opportunity for customization.
+Hopefully this document will inspire you to utilize your own creativity with this funciton.
+
 
