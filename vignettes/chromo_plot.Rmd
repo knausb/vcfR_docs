@@ -354,7 +354,7 @@ myList3 <- list(title = paste(colnames(dp)[3], collapse=","),
 
 
 
-```{r, fig.height=5}
+```{r, fig.height=7}
 chromo( chrom, boxp = TRUE , chrom.e = chrom@len, 
         drlist1 = myList1,
         drlist2 = myList2,
