@@ -20,22 +20,22 @@ knitr::opts_chunk$set(fig.align = 'center')
 ## Chromo plots
 
 
-The chromo plot was created in order to visualize VCF data as plotted along a single chromosome.
+The `chromo()` plot was created in order to visualize VCF data as plotted along a single chromosome.
 Depending on the state of the genome you're working on, a 'chromosome' may actually be a 'scaffold', 'supercontig' or simply a 'contig.'
 For the purposes of this discussion a 'chromosome' is simply a single sequence used as a reference in order to call variants.
 
 
 The `chromoqc()` plot was introduced in other documentation.
-This plot is actually a wrapper to the 'chromo' plot.
-Because it is a wrapper it is a simplification of the 'chromo' plot.
-Also because it is a wrapper, it lacks some of the flexibility of the 'chromo' plot.
-Here we will take a closer look at the 'chromoqc' plot and then extend this knowledge to create the more customized 'chromo' plot.
+This plot is actually a wrapper to the `chromo()` plot.
+Because it is a wrapper it is a simplification of the `chromo()` plot.
+Also because it is a wrapper, it lacks some of the flexibility of the `chromo()` plot.
+Here we will take a closer look at the 'chromoqc' plot and then extend this knowledge to create the more customized `chromo()` plot.
 
 
 ## Chromoqc
 
 
-In previous documentation we have rendered a 'chromoqc' plot.
+In other documentation we have rendered a `chromoqc()` plot.
 Here we reproduce this plot as a starting point for our discussion.
 
 
@@ -65,12 +65,12 @@ chromoqc(chrom)
 This plot can be seen as seven horizontal plots.
 Five of these plots include marginal box and whisker plots.
 Two of these plots (at the bottom) lack marginal box and whisker plots and are half the height of the other plots.
-The organization of this plot was created with the function 'graphics::layout()' which provides for multi-panel plots where each panel is not of the same dimensions.
+The organization of this plot was created with the function `graphics::layout()` which provides for multi-panel plots where each panel is not of the same dimensions.
 The manual page for this function provides details.
 
 
 Each of these panels was created with the function `dr.plot()`.
-In order to learn how to make a 'chromo' plot we need to learn how to make each of the panels of a `chromo()` plot.
+In order to learn how to make a `chromo()` plot we need to learn how to make each of the panels of a `chromo()` plot.
 And in order to understand how each of these panels are created, we need to understand the `dr.plot()` function.
 
 
@@ -86,10 +86,12 @@ We'll begin by working with dot plots.
 ### Dot plots
 
 
-The dr.plot function can accomodate a flexible number of data.
+The `dr.plot()` function can accomodate a flexible number of data.
 For dot plots this is facilitated by using a numeric matrix to specify the coordinates.
 The first column of this matrix should be the x-coordinate.
-This frequently comes from teh POS column in VCF data.
+This frequently comes from the POS column in VCF data.
+Because the coordinates for each chromosome typically begins at one, multiple chromosomes become awkward to arrange.
+(That is, their coordinate systems would need to be altered in some manner.)
 Every subsequent column can be a different data type.
 For our data we'll use information from the 'var.info' slot of our example data.
 We have some values that are rather large so we'll prune these data to only include values below 1,000.
@@ -126,15 +128,18 @@ dr.plot( dmat = dot1,
 
 
 Because we've chosen to plot the data from different columns with different colors we need to pass a vector of colors as our argument to dcol.
+The concatenation function(`c()`) manages this for us.
 
 
 ### Rectangle plots
 
 
 Barcharts are frequently used to summarize information.
-In the context of the dr.plot barcharcts are created using matrices of coordinates.
+In the context of the dr.plot barcharts are created using matrices of coordinates.
 These matrices consist of coordinates for the xleft, ybottom, xright and ytop of each rectangle.
 This was modeled after `rect()`.
+The `win.info' slot of our `chromR` object has information on window coordinates as well as the count of variants per window (variant incidence).
+We'll use this information for this example.
 
 
 ```{r, fig.width=7, fig.align='center'}
@@ -157,6 +162,8 @@ dr.plot( rlst = mat1, chrom.e = 100001 )
 
 In order to attain flexibility in the amount of data we can use for a rectangle plot a list of matrices can be passed to `dr.plot()` as the argument to `rlst`.
 We'll first need to create a couple more matrices to use this example.
+The 'win.info' slot of our `chromR` object contains information on nucleotide content as well as sliding window coordinates.
+We can use this information for our example.
 
 
 ```{r}
@@ -174,14 +181,13 @@ mat3 <- cbind(chrom@win.info[,'start'],
 ```
 
 
-
-
-
-
-
 ```{r, fig.width=7, fig.align='center'}
 dr.plot( rlst = list(mat2, mat3), chrom.e = 100001 )
 ```
+
+
+Here we've relied on the default color palette.
+We could also provide a vector of colors to the parameter `rcol`.
 
 
 ### Dot and rectangle plots
@@ -230,7 +236,7 @@ dr.plot( dmat = dot1,
 ## chromo plot
 
 
-A basic chromo plot can be creates with just an object of class `chromR`.
+A basic chromo plot can be created with just an object of class `chromR`.
 Here we use our example data that includes a reference (sequence data), annotations and variants (from the VCF file).
 
 
@@ -239,15 +245,15 @@ chromo( chrom, boxp = TRUE )
 ```
 
 
-This provides four tracks: annotations, nucleotides, nucleotide content and variant incidence.
+This provides four tracks: annotations, nucleotides, nucleotide content and variant incidence (or count per window).
 We can compare this to the `chromoqc` plot presented above.
 This can be seen as a foundation upon which to include other forms of data as additional panes.
-Up to three additional panes can be included by using the argument drlist1, drlist2 or drlist3.
-The argument used for drlist is a names list that can include the values title, dmat, rlist, dcol, rcol, rbcol and bwcol.
+Up to three additional panes can be included by using the arguments drlist1, drlist2 or drlist3.
+The argument used for drlist is a named list that can include the values title, dmat, rlist, dcol, rcol, rbcol and bwcol.
 
-* The `title` is a name for the plot.
+* The `title` is a name for the panel.
 * The parameter `dmat` is a matrix of dot coordinates where the first column is the position (POS) and each subsequent column are y-coordinates.
-* `rlist` is a list of rectangle coordinates.
+* `rlist` is a list containing numeric matrices of rectangle coordinates.
 * `dcol` is a vector of colors for the dots.
 * `rcol` is a vector of colors for the rectangles.
 * `rbcol` is a vector of colors to be used for the rectangle borders.
@@ -275,6 +281,7 @@ rlist <- list(rlst1)
 myList1 <- list(title = "Track1",
                 dmat  = chrom@var.info[,2:4],
                 rlst = rlst1,
+                dcol = c("#8DD3C711", "#FB807211"),
                 rcol=4,
                 bwcol=1:2
                 )
@@ -289,6 +296,9 @@ chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1  )
 ```
 
 
+Note that the dots are painted onto the graphic after the rectangles.
+Even though we've used transparency (an alpha chanel) to our colors, they obscure the rectangles.
+This highlights how easy it is to make busy plots with genomic data.
 We can create additional panes by adding data to drlist2.
 Here we'll just reuse the data from drlist1 as an example.
 
@@ -299,6 +309,7 @@ chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1, drlist2 = m
 
 
 In theory just about any sort of data can be used.
+For example, we can extract the variant depths (DP) from teh VCF data and plot one sample's depths along the chromosome.
 
 
 ```{r}
@@ -316,7 +327,7 @@ chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1)
 ```
 
 
-We can include multiple samples in on plot by adding columns to our dot matrix.
+We can include multiple samples in a plot by adding multiple columns to our dot matrix.
 
 
 ```{r}
@@ -333,7 +344,7 @@ chromo( chrom, boxp = TRUE , chrom.e = chrom@len, drlist1 = myList1)
 ```
 
 
-Or plot them as separate panes.
+Or we can plot them as separate panes.
 
 
 ```{r}
