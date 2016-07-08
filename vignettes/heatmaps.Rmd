@@ -1,0 +1,109 @@
+---
+title: "Heatmaps"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Visualization 2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=7)
+knitr::opts_chunk$set(fig.align = 'center')
+```
+
+
+Heatmaps can be effective way to visualize large quantities of data.
+Within vcfR we've implemented our own flavor of heatmap with `heatmap.bp()`.
+Many other flavors exist within R, some of which I've included in the 'See Also' section of the manual page `?heatmap.bp`.
+
+
+Here we work through an example.
+First we load the package and test data.
+
+
+```{r}
+library(vcfR)
+data(vcfR_test)
+```
+
+
+We can explore the contents of the vcfR object by using the `head()` function.
+
+
+```{r}
+head(vcfR_test)
+```
+
+
+The element 'DP' describes how many times each variant has been sequenced.
+Its also a good example of continuous numeric data.
+We can use the `extract.gt()` function to create a matrix containing this data.
+
+
+```{r}
+dp <- extract.gt(vcfR_test, element='DP', as.numeric=TRUE)
+class(dp)
+dp
+```
+
+
+The object returned from `extract.gt()` is a matrix, a standard R container.
+More information on this class can be found on its manual pages using `?matrix`.
+We can now visualize this matrix with a heatmap.
+
+
+```{r}
+heatmap.bp(dp)
+```
+
+
+The column and row names are displayed with the marginal barplots.
+By default, the rownames are their row numbers in the matrix.
+This also illustates that row number one is at the bottom of the plot and subsequent rows appear above it.
+
+
+Some may find this naming convention to be lacking.
+We can rename the rownames to anything we feel is appropriate.
+One option is to use the CHROM and POS information from the VCF data.
+
+
+```{r}
+rownames(dp) <- paste(vcfR_test@fix[,1], vcfR_test@fix[,2], sep=":")
+heatmap.bp(dp)
+```
+
+
+The 'ID' column of the VCF data may also contain meaningful names.
+Our example includes an 'ID' column that includes a mixture of names and missing data (NA).
+We can use the `addID()` function to populate the missing 'ID' slots with the 'CHROM' and 'POS' information.
+
+
+
+```{r}
+vcfR_test <- addID(vcfR_test)
+vcfR_test@fix
+```
+
+
+And use this to name our rows.
+
+
+```{r}
+rownames(dp) <- vcfR_test@fix[,'ID']
+heatmap.bp(dp)
+```
+
+
+
+
+```{r}
+sessionInfo()
+```
+
+
