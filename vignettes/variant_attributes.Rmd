@@ -1,0 +1,91 @@
+---
+title: "Variant attributes"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Subset to one chromosome}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(vcfR)
+data(vcfR_example)
+```
+
+
+
+```{r}
+#vcf@gt[1,1:2]
+gt <- extract.gt(vcf)
+hets <- is_het(gt)
+is.na( vcf@gt[,-1][ !hets ] ) <- TRUE
+```
+
+
+
+```{r}
+vcf@gt[1,1:2]
+gt <- extract.gt(vcf)
+ad <- extract.gt(vcf, element = 'AD', as.numeric = FALSE)
+ad1 <- AD_frequency(ad)
+dp <- extract.gt(vcf, element = 'DP', as.numeric = TRUE)
+gq <- extract.gt(vcf, element = 'GQ', as.numeric = TRUE)
+
+
+unlist(lapply(strsplit(ad[,1], split=","), function(x){sort(as.numeric(x), decreasing = TRUE)[1]}))
+
+```
+
+
+```{r}
+par(mar=c(8,4,4,2))
+boxplot(dp, las=3, col="#F4A460", ylab="DP")
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r}
+
+hist(ad1[,'P17777us22'], xlim=c(0,1), breaks=seq(0,1,by=0.02), col="#F4A460", xaxt="n")
+axis(side=1, at=c(0, 0.25, 0.333, 0.5, 0.666, 0.75, 1), labels=c(0,"1/4", "1/3", "1/2", "2/3", "3/4", 1), las=3)
+
+mean(ad1[,'P17777us22'], na.rm = TRUE)
+median(ad1[,'P17777us22'], na.rm = TRUE)
+quantile(ad1[,'P17777us22'], na.rm=TRUE)
+
+
+library(moments)
+
+skewness(ad1[,'P17777us22'], na.rm = TRUE)
+
+kurtosis(ad1[,'P17777us22'], na.rm = TRUE)
+
+```
+
+
+
+```{r}
+
+strsplit(vcf@fix[1,'INFO'], ";"
+
+
+grep("=AC", vcf@meta, value=T)
+
+
+
+ac <- unlist(lapply(strsplit(vcf@fix[,'INFO'], ";"), function(x){ grep("^AC=", x, value=TRUE) }))
+unlist(lapply(strsplit(ac, split = "="), function(x){ x[2] }))
+
+
+
+```
