@@ -22,6 +22,39 @@ data(vcfR_example)
 ```
 
 
+## INFO
+
+
+```{r}
+mINFO <- metaINFO2df(vcf)
+mINFO[1:3,1:4]
+nrow(mINFO)
+```
+
+
+
+```{r}
+INFO <- INFO2df(vcf)
+head(INFO)
+apply(INFO, MARGIN = 2, class)
+```
+
+
+
+
+## GT data
+
+
+Determine what data we have by querrying the FORMAT column.
+
+
+```{r}
+unique(vcf@gt[,1])
+```
+
+
+Subset to only heterozygotes.
+
 
 ```{r}
 #vcf@gt[1,1:2]
@@ -40,10 +73,13 @@ ad1 <- AD_frequency(ad)
 dp <- extract.gt(vcf, element = 'DP', as.numeric = TRUE)
 gq <- extract.gt(vcf, element = 'GQ', as.numeric = TRUE)
 
+pl <- extract.gt(vcf, element = 'PL', as.numeric = FALSE)
+pl1 <- AD_frequency(pl)
 
-unlist(lapply(strsplit(ad[,1], split=","), function(x){sort(as.numeric(x), decreasing = TRUE)[1]}))
 
+#unlist(lapply(strsplit(ad[,1], split=","), function(x){sort(as.numeric(x), decreasing = TRUE)[1]}))
 ```
+
 
 
 ```{r}
@@ -51,6 +87,21 @@ par(mar=c(8,4,4,2))
 boxplot(dp, las=3, col="#F4A460", ylab="DP")
 par(mar=c(5,4,4,2))
 ```
+
+
+
+```{r}
+range(pl1[,1], na.rm = TRUE)
+seq(min(pl1[,1], na.rm = TRUE), max(pl1[,1], na.rm = TRUE), by=0.02)
+
+hist(pl1[,'P17777us22'], 
+#     breaks = seq(min(pl1[,'P17777us22'], na.rm = TRUE), max(pl1[,'P17777us22'], na.rm = TRUE), by=0.01),
+     breaks = seq(0.5, 1.0, by=0.01),
+     col="#F4A460",
+     main = "PL")
+```
+
+
 
 
 
@@ -76,16 +127,100 @@ kurtosis(ad1[,'P17777us22'], na.rm = TRUE)
 
 ```{r}
 
-strsplit(vcf@fix[1,'INFO'], ";"
+gtm <- cbind(ad1[,'P17777us22'], dp[,'P17777us22'], gq[,'P17777us22'], pl1[,'P17777us22'])
+colnames(gtm) <- c('ad1','dp','gq','pl1')
+head(gtm)
+
+apply(gtm, MARGIN=2, class)
+
+gtd <- dist(scale(gtm))
+
+range(gtd, na.rm = TRUE)
+gtd[ is.na(gtd) ] <- 0
+
+pco <- cmdscale(gtd)
+
+plot(pco, pch=20, col="#F4A460")
+
+```
 
 
-grep("=AC", vcf@meta, value=T)
+
+```{r}
+library(vegan)
+
+
+gtm2 <- gtm[!apply(gtm, MARGIN=1, function(x){ sum(is.na(x)) == length(x) }),]
+INFO2 <- INFO[!apply(gtm, MARGIN=1, function(x){ sum(is.na(x)) == length(x) }),]
+
+INFO2 <- apply(INFO2, MARGIN=2, as.numeric)
+INFO2 <- as.data.frame(INFO2)
+class(INFO2)
+apply(INFO2, MARGIN=2, class)
 
 
 
-ac <- unlist(lapply(strsplit(vcf@fix[,'INFO'], ";"), function(x){ grep("^AC=", x, value=TRUE) }))
-unlist(lapply(strsplit(ac, split = "="), function(x){ x[2] }))
+#gtd <- vegdist(gtm2, method="bray", na.rm = TRUE)
 
+
+mds1 <- metaMDS(gtm2)
+
+#plot(mds1)
+
+ord <- mds1
+
+plot(ord, type = "n")
+points(ord, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
+text(ord, display = "spec", cex=1.2, col="blue")
+
+#INFO2 <- cbind(NA, NA, INFO2)
+colnames(INFO2)
+
+#INFO2[is.na(INFO2)] <- 0
+#apply(INFO2, MARGIN=2, function(x){ sum(is.na(x)) })
+
+colnames(INFO2)
+INFO2[1:3,1:7]
+ord.fit <- envfit(ord, env=INFO2[,-c(7,9,14)], perm=999, na.rm = TRUE)
+#ord.fit <- envfit(ord, env=INFO2[,1:6], perm=999, na.rm = TRUE)
+#ord.fit <- envfit(ord ~ AC + AF + AN, data=INFO2, perm=999)
+
+plot(ord, type = "n")
+points(ord, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
+text(ord, display = "spec", cex=1.2, col="blue")
+#plot(ord.fit, choices = c(1,2))
+
+#nlabs <- labels(ord.fit)
+#nlabs$factors <- rep("", times=length(nlabs$factors))
+
+scores(ord.fit, "vectors")
+plot(ord.fit, choices = c(1,2), at = c(0,0),
+#     labels = nlabs,
+     axis = FALSE, p.max = 0.05, col = "#008000", add = TRUE)
 
 
 ```
+
+
+
+
+```{r, eval=FALSE}
+
+png("P17777us22_varord.png", width=800, height=800)
+
+plot(ord, type = "n")
+points(ord, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
+text(ord, display = "spec", cex=1.2, col="blue")
+
+scores(ord.fit, "vectors")
+plot(ord.fit, choices = c(1,2), at = c(0,0),
+     axis = FALSE, p.max = 0.05, col = "#008000", add = TRUE)
+
+title(main="P17777us22")
+
+dev.off()
+
+
+```
+
+

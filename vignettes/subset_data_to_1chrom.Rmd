@@ -14,7 +14,7 @@ The functions in vcfR are designed to work on a single chromosome.
 Many genomes don't actually have chromosomes but instead have supercontigs or contigs.
 Here I use the terms chromosome, supercontig and contig as synonyms.
 They make for a nice way to subset genomic data to a smaller unit, and this unit as a convenient coordinant system.
-Depending on the organisation of your data, you may have to subset some of your files before you can use them in vcfR.
+Depending on the organization of your data, you may have to subset some of your files before you can use them in vcfR.
 Here I demontrate how I accomplish this.
 
 
