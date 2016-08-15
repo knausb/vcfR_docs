@@ -41,6 +41,14 @@ apply(INFO, MARGIN = 2, class)
 
 
 
+## META
+
+
+
+```{r}
+queryMETA(vcf)
+```
+
 
 ## GT data
 
@@ -204,9 +212,73 @@ plot(ord.fit, choices = c(1,2), at = c(0,0),
 
 
 
+
+```{r sample.ord}
+
+library(vcfR)
+data(vcfR_test)
+x <- vcfR_test
+
+
+sample.ord <- function(x, sample, print = TRUE, verbose = TRUE){
+  require(vegan)
+  
+  x <- x[,c(1,sample)]
+  
+  # INFO data
+  myINFO <- INFO2df(x)
+  myMETA <- metaINFO2df(x)
+  
+  # Get FORMAT fields
+  myFORMAT <- unlist( lapply( queryMETA(x, element="FORMAT="), function(x){x[1]} ) )
+  myFORMAT <- unlist( lapply( strsplit(myFORMAT, split="="), function(x){ x[length(x)] } ) )
+  myFORMAT <- myFORMAT[ myFORMAT != "GT" ]
+  
+  
+  # Ordination
+#  suppressMessages(mds1 <- vegan::metaMDS(gtm2, distance = "bray", k = 2))
+#  suppressWarnings(mds1 <- vegan::metaMDS(gtm2, distance = "bray", k = 2))
+
+  # Ordination
+  mds1 <- vegan::metaMDS(gtm2, distance = "bray", k = 2)
+
+  # http://stackoverflow.com/a/2501913
+#  sink("/dev/null")    # now suppresses
+#  mds1 <- vegan::metaMDS(gtm2, distance = "bray", k = 2)
+#  sink()
+
+  # Covariates
+  ord.fit <- envfit(mds1, env=INFO2[,-c(7,9,14)], perm=999, na.rm = TRUE)
+  
+  # Plot
+  plot(mds1, type = "n")
+#  points(mds1, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
+  points(mds1, display = "sites", cex = 0.8, pch=20, col=rgb(139,69,19, alpha=50, maxColorValue = 255))
+  text(mds1, display = "spec", cex=1.2, col="blue")
+  
+  plot(ord.fit, choices = c(1,2), at = c(0,0),
+       axis = FALSE,
+#       p.max = 0.05,
+       col = "#008000", add = TRUE)
+  
+  
+  return( list( metaMDS = mds1, envfit = ord.fit ) )
+}
+
+
+
+
+
+
+```
+
+
+
+
+
 ```{r, eval=FALSE}
 
-png("P17777us22_varord.png", width=800, height=800)
+#png("P17777us22_varord.png", width=800, height=800)
 
 plot(ord, type = "n")
 points(ord, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
@@ -218,7 +290,7 @@ plot(ord.fit, choices = c(1,2), at = c(0,0),
 
 title(main="P17777us22")
 
-dev.off()
+#dev.off()
 
 
 ```
