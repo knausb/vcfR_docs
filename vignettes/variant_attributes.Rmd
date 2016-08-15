@@ -227,7 +227,7 @@ is.na(x@gt[,-1][!hets]) <- TRUE
 
 
 
-sample.ord <- function(x, sample, distance = "bray", print = TRUE, verbose = TRUE){
+sample.ord <- function(x, sample, distance = "bray", print = TRUE, verbose = TRUE, ...){
   require(vegan, quietly = verbose)
   
   x <- x[,c(1,sample)]
@@ -333,12 +333,13 @@ sample.ord <- function(x, sample, distance = "bray", print = TRUE, verbose = TRU
 #  points(mds1, display = "sites", cex = 0.8, pch=21, col="red", bg="yellow")
   points(mds1, display = "sites", cex = 0.8, pch=20, col=rgb(139,69,19, alpha=50, maxColorValue = 255))
   ordiellipse(mds1, groups = factor( rep(1, times=nrow(myGT)) ), kind = "sd", conf = 0.68, col = "#808080" )  
-  text(mds1, display = "spec", cex=1.2, col="blue")
+  text(mds1, display = "spec", col="blue", ...)
+  title( main = colnames(x@gt)[2] )
   
   plot(ord.fit, choices = c(1,2), at = c(0,0),
        axis = FALSE,
   #     p.max = 0.05,
-       col = "#008000", add = TRUE)
+       col = "#008000", add = TRUE, ... )
   
   invisible( list( metaMDS = mds1, envfit = ord.fit ) )
 }
@@ -356,6 +357,9 @@ sample.ord(vcf, sample = 2)
 nrow(vcf)
 sample.ord(vcf[1:1e3,], sample = 2)
 sample.ord(vcf, sample = 2)
+sample.ord(vcf, sample = 14 )
+
+# sample.ord(vcf, sample = "P17777us22" )
 
 
 ```
