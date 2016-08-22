@@ -199,6 +199,9 @@ First we'll look at the raw data.
 
 ```{r}
 #vcf <- extract.indels(vcf)
+#gq <- extract.gt(vcf, element = 'GQ', as.numeric = TRUE)
+#vcf@gt[,-1][ gq < 99 ] <- NA
+
 ad <- extract.gt(vcf, element = 'AD')
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
