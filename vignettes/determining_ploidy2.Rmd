@@ -214,11 +214,14 @@ ad <- extract.gt(vcf, element = 'AD')
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
 boxplot(allele1, las=3)
-hist(allele1[,"P17777us22"], ylim=c(0,2000), breaks = seq(0,100,by=5) )
+hist(allele1[,"P17777us22"], ylim=c(0,2000),
+     breaks = seq(0,max(allele1[,"P17777us22"], na.rm = TRUE),by=5),
+     xlim=c(0,100))
 
 # Subset to a vector for manipulation.
 tmp <- allele1[,"P17777us22"]
-hist(tmp, breaks=seq(1,100,by=1), col="#808080")
+tmp <- tmp[tmp <= 100]
+hist(tmp, breaks=seq(0,100,by=1), col="#808080")
 ```
 
 
@@ -242,24 +245,23 @@ vcf@gt[,-1][dp2 > 0] <- NA
 
 # Hard filter
 #dp[dp < 4] <- NA
-#
-vcf@gt[,-1][allele1 < 8] <- NA
+#vcf@gt[,-1][allele1 < 8] <- NA
 #
 
-adp <- adp[adp<=100]
+#adp <- adp[adp<=100]
 #adp <- adp[adp>=sums[,"P17777us22"][1]]
 #adp <- adp[adp<=sums[,"P17777us22"][2]]
 
-hist(adp, breaks=seq(0, max(adp, na.rm = TRUE )+1, by=1), col="#C0C0C0", xlim = c(0,100))
-axis(side=1,at=1:4*10)
-abline(v=sums[,"P17777us22"], col=2, lwd = 2)
+#hist(adp, breaks=seq(0, max(adp, na.rm = TRUE )+1, by=1), col="#C0C0C0", xlim = c(0,100))
+#axis(side=1,at=1:4*10)
+#abline(v=sums[,"P17777us22"], col=2, lwd = 2)
 
-adp <- allele2[,"P17777us22"]
-adp <- adp[adp>0]
-adp <- adp[adp<=100]
-hist(adp, breaks=seq(0, max(adp, na.rm = TRUE), by=1), col="#C0C0C0")
+#adp <- allele2[,"P17777us22"]
+#adp <- adp[adp>0]
+#adp <- adp[adp<=100]
+#hist(adp, breaks=seq(0, max(adp, na.rm = TRUE), by=1), col="#C0C0C0")
 #par(mfrow=c(1,1))
-abline(v=sums[,"P17777us22"], col=2, lwd = 2)
+#abline(v=sums[,"P17777us22"], col=2, lwd = 2)
 ```
 
 
@@ -336,6 +338,330 @@ axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c(0,"1/4","1/3","1/2","
 
 We see that the shoulders that were present in the previous plot are almost entirely removed.
 This appears to be a dramatic improvement.
+
+
+
+```{r, eval=FALSE}
+tmp <- data.frame(POS = vcf@fix[,'POS'], ad1 = ad1[,"P17777us22"])
+tmp <- tmp[!is.na(tmp$ad1),]
+p <- ggplot(tmp, aes(x=POS, y=ad1)) +
+            geom_point(shape=1) +
+            geom_smooth()
+p <- p + scale_y_continuous(limits = c(0, 1),
+                            breaks=c(0,0.25,0.333,0.5,0.666,0.75,1),
+                            labels=c("0","1/4","1/3", "1/2","2/3","3/4","1"))
+p
+```
+
+
+
+
+```{r, fig.height=4}
+sample <- "P17777us22"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "DDR7602"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "P13626"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "blue13"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "BL2009P4_us23"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.4)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "P10650"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r, fig.height=4, echo=FALSE}
+sample <- "RS2009P1_us8"
+bp1 <- hist(ad1[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+bp2 <- hist(ad2[,sample], breaks = seq(0,1,by=0.02), plot = FALSE)
+
+#par(mfrow = c(1,2))
+layout(matrix(c(1,2), nrow=1), widths= c(4,1))
+par(mar=c(5,0,0.1,0.1))
+par(oma=c(0,3,0,1))
+
+plot(vcf@fix[,'POS'], ad1[,sample], ylim=c(0,1), ylab="", xlab="", pch=20, col="#8B000022", yaxt="n", type="n")
+abline(h=c(0.25,0.333,0.5,0.666,0.75), col="#C0C0C0")
+points(vcf@fix[,'POS'], ad1[,sample], pch=20, col="#8B000012")
+points(vcf@fix[,'POS'], ad2[,sample], pch=20, col="#228B2212")
+axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "POS")
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
+data <- data[!is.na(ad1[,sample]),]
+lw1 <- loess(y ~ x,data=data, span=0.5)
+j <- order(data$x)
+lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+#barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
+#barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
+barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col="#8B0000")
+barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col="#228B22")
+#axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c("0","1/4","1/3","1/2","2/3","3/4","1"), las=2)
+title(xlab = "Count")
+
+title(main = sample, outer = TRUE, line=-1.5)
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
 
 
 
