@@ -332,7 +332,7 @@ ad2 <- allele2 / (allele1 + allele2)
 
 hist(ad2[,"P17777us22"], breaks = seq(0,1,by=0.02), col = "#808080", xaxt="n", main="P17777us22")
 hist(ad1[,"P17777us22"], breaks = seq(0,1,by=0.02), col = "#C0C0C0", add = TRUE)
-axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c(0,"1/4","1/3","1/2","1/3","3/4",1))
+axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c(0,"1/4","1/3","1/2","2/3","3/4",1))
 ```
 
 
@@ -375,15 +375,17 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+
+# fitted(lw1)
 
 #barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
 #barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
@@ -419,15 +421,15 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw2 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
-lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
+lines(data$x[j],lw2$fitted[j],col="red",lwd=3)
 
 #barplot(bp1$mids, bp1$counts, horiz = T, ylim=c(0,1))
 #barplot(height=bp1$counts, width=bp1$mids,  space = 0, horiz = F, add = FALSE)
@@ -463,13 +465,13 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
@@ -507,13 +509,13 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
@@ -551,13 +553,13 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
@@ -596,13 +598,13 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
@@ -640,13 +642,13 @@ title(xlab = "POS")
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad1[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
 data <- data.frame(x = as.numeric(vcf@fix[,'POS']), y = ad2[,sample])
 data <- data[!is.na(ad1[,sample]),]
-lw1 <- loess(y ~ x,data=data, span=0.5)
+lw1 <- loess(y ~ x,data=data, span=0.75)
 j <- order(data$x)
 lines(data$x[j],lw1$fitted[j],col="red",lwd=3)
 
