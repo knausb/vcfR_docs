@@ -1,0 +1,132 @@
+---
+title: "Determining ploidy 3"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Subset to one chromosome}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.align = 'center')
+knitr::opts_chunk$set(fig.width = 8)
+knitr::opts_chunk$set(fig.height = 8)
+```
+
+
+
+
+## Input data
+
+
+Data import is performed similar to other examples.
+
+
+```{r}
+# Load libraries
+library(vcfR)
+library(pinfsc50)
+
+# Determine file locations
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+
+# Read data into memory
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+vcf
+```
+
+
+
+
+
+
+
+
+
+```{r}
+library(reshape2)
+library(ggplot2)
+
+
+dpf <- melt(allele1, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
+dpf <- dpf[ dpf$Depth > 0,]
+p <- ggplot(dpf, aes(x=Sample, y=Depth)) + geom_violin(fill="#C0C0C0", adjust=1.0,
+                                                       scale = "count", trim=TRUE)
+p <- p + theme_bw()
+p <- p + theme(axis.title.x = element_blank(), 
+               axis.text.x = element_text(angle = 60, hjust = 1))
+p <- p + scale_y_continuous(trans=scales::log2_trans(), 
+                            breaks=c(1, 10, 100, 800),
+                            minor_breaks=c(1:10, 2:10*10, 2:8*100))
+p <- p + theme( panel.grid.major.y=element_line(color = "#A9A9A9", size=0.6) )
+p <- p + theme( panel.grid.minor.y=element_line(color = "#C0C0C0", size=0.2) )
+p <- p + ggtitle("Allele #1")
+p
+
+
+dpf <- melt(allele2, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
+dpf <- dpf[ dpf$Depth > 0,]
+p <- ggplot(dpf, aes(x=Sample, y=Depth)) + geom_violin(fill="#C0C0C0", adjust=1.0,
+                                                       scale = "count", trim=TRUE)
+p <- p + theme_bw()
+p <- p + theme(axis.title.x = element_blank(), 
+               axis.text.x = element_text(angle = 60, hjust = 1))
+p <- p + scale_y_continuous(trans=scales::log2_trans(), 
+                            breaks=c(1, 10, 100, 800),
+                            minor_breaks=c(1:10, 2:10*10, 2:8*100))
+p <- p + theme( panel.grid.major.y=element_line(color = "#A9A9A9", size=0.6) )
+p <- p + theme( panel.grid.minor.y=element_line(color = "#C0C0C0", size=0.2) )
+p <- p + ggtitle("Allele #2")
+p
+
+```
+
+
+
+
+## A panel of samples
+
+
+```{r, fig.height=3}
+
+barplot(sort(sums[1,], decreasing = TRUE), las=3)
+
+barplot(sort(apply(ad1, MARGIN=2, function(x){sum(!is.na(x))}), decreasing = TRUE), las=3)
+#plot(sums[1,], apply(ad1, MARGIN=2, function(x){sum(!is.na(x))}))
+```
+
+
+```{r}
+
+knitr::kable(sums[,1:9])
+knitr::kable(sums[,10:18])
+
+
+#pdf('pinfsc50_hists.pdf', width=8, height=8)
+
+par(mfrow = c(6,3))
+par(mar=c(2,2,2,0))
+
+for(i in 1:18){
+  hist(ad2[,i], breaks = seq(0,1,by=0.02), col = "#808080", xaxt="n", main="", xlab="", ylab="")
+  hist(ad1[,i], breaks = seq(0,1,by=0.02), col = "#C0C0C0", add = TRUE)
+  axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c(0,"1/4","1/3","1/2","1/3","3/4",1))
+  title( main = colnames(ad1)[i])
+  abline(h=seq(0,40,by=5) * 10, col="#80808088")
+  abline(h=seq(0,10,by=2), col="#80808088", lty=2)
+}
+
+#dev.off()
+
+par(mfrow = c(1,1))
+par(mar=c(5,4,4,2))
+```
+
+
+
+

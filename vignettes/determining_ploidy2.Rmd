@@ -10,7 +10,6 @@ vignette: >
 ---
 
 
-
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(fig.align = 'center')
 knitr::opts_chunk$set(fig.width = 8)
@@ -20,8 +19,7 @@ knitr::opts_chunk$set(fig.height = 8)
 
 
 For some organisms ploidy information is unclear.
-This is important because while current variant callers can accomodate different ploidies they cannot infer ploidy.
-The user needs to specify the ploidy as an option.
+This is important because current variant callers can need to have ploidy specified at the time of variant calling (i.e., they cannot infer ploidy).
 Here I explore a method to infer ploidy from VCF data.
 
 
@@ -45,13 +43,6 @@ vcf <- read.vcfR(vcf_file, verbose = FALSE)
 vcf
 ```
 
-
-## How a genotype gets called
-
-
-```{r}
-knitr::kable(vcf@gt[c(1:2,11),1:3])
-```
 
 
 ## Allele balance
@@ -84,6 +75,20 @@ ad <- extract.gt(vcf, element = 'AD')
 knitr::kable(ad[c(1:2,11,30),1:4])
 ```
 
+Note that these genotypes were called as diploids.
+This can be validated by confirming that the genotypes consist of two alleles.
+Allele depth appears to be independent of this parameterization.
+This is probably because this information can be gathered upstream of the process of genotype calling.
+Despite the specification of diploidy, the allele depth information can include the observation of multiple alleles.
+
+
+```{r}
+#knitr::kable(ad[grep("[^0],[^0],[^0]", ad[,'DDR7602']),1:4])
+knitr::kable(ad[grep("[^0],[^0],[^0]", ad[,'P13626']),c(2:4,12)])
+```
+
+
+
 
 The function `extract.gt()` isolates the 'AD' data from the colon delimited string in the VCF data.
 We expect integer counts for the number of sequences observed.
@@ -101,7 +106,7 @@ ad2 <- allele2 / (allele1 + allele2)
 ```
 
 
-One we have our allele frequencies we can plot them in a histogram.
+Once we have our allele frequencies we can plot them with a histogram.
 
 
 ```{r}
@@ -214,14 +219,14 @@ ad <- extract.gt(vcf, element = 'AD')
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
 boxplot(allele1, las=3)
-hist(allele1[,"P17777us22"], ylim=c(0,2000),
-     breaks = seq(0,max(allele1[,"P17777us22"], na.rm = TRUE),by=5),
-     xlim=c(0,100))
+#hist(allele1[,"P17777us22"], ylim=c(0,2000),
+#     breaks = seq(0,max(allele1[,"P17777us22"], na.rm = TRUE),by=5),
+#     xlim=c(0,100))
 
 # Subset to a vector for manipulation.
-tmp <- allele1[,"P17777us22"]
-tmp <- tmp[tmp <= 100]
-hist(tmp, breaks=seq(0,100,by=1), col="#808080")
+#tmp <- allele1[,"P17777us22"]
+#tmp <- tmp[tmp <= 100]
+#hist(tmp, breaks=seq(0,100,by=1), col="#808080")
 ```
 
 
@@ -265,44 +270,6 @@ vcf@gt[,-1][dp2 > 0] <- NA
 ```
 
 
-```{r}
-library(reshape2)
-library(ggplot2)
-
-
-dpf <- melt(allele1, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
-dpf <- dpf[ dpf$Depth > 0,]
-p <- ggplot(dpf, aes(x=Sample, y=Depth)) + geom_violin(fill="#C0C0C0", adjust=1.0,
-                                                       scale = "count", trim=TRUE)
-p <- p + theme_bw()
-p <- p + theme(axis.title.x = element_blank(), 
-               axis.text.x = element_text(angle = 60, hjust = 1))
-p <- p + scale_y_continuous(trans=scales::log2_trans(), 
-                            breaks=c(1, 10, 100, 800),
-                            minor_breaks=c(1:10, 2:10*10, 2:8*100))
-p <- p + theme( panel.grid.major.y=element_line(color = "#A9A9A9", size=0.6) )
-p <- p + theme( panel.grid.minor.y=element_line(color = "#C0C0C0", size=0.2) )
-p <- p + ggtitle("Allele #1")
-p
-
-
-dpf <- melt(allele2, varnames=c('Index', 'Sample'), value.name = 'Depth', na.rm=TRUE)
-dpf <- dpf[ dpf$Depth > 0,]
-p <- ggplot(dpf, aes(x=Sample, y=Depth)) + geom_violin(fill="#C0C0C0", adjust=1.0,
-                                                       scale = "count", trim=TRUE)
-p <- p + theme_bw()
-p <- p + theme(axis.title.x = element_blank(), 
-               axis.text.x = element_text(angle = 60, hjust = 1))
-p <- p + scale_y_continuous(trans=scales::log2_trans(), 
-                            breaks=c(1, 10, 100, 800),
-                            minor_breaks=c(1:10, 2:10*10, 2:8*100))
-p <- p + theme( panel.grid.major.y=element_line(color = "#A9A9A9", size=0.6) )
-p <- p + theme( panel.grid.minor.y=element_line(color = "#C0C0C0", size=0.2) )
-p <- p + ggtitle("Allele #2")
-p
-
-```
-
 
 Now we can check out work with another set of box and whisker plots.
 
@@ -341,6 +308,9 @@ This appears to be a dramatic improvement.
 
 
 
+## Chromosomal perspectives
+
+
 ```{r, eval=FALSE}
 tmp <- data.frame(POS = vcf@fix[,'POS'], ad1 = ad1[,"P17777us22"])
 tmp <- tmp[!is.na(tmp$ad1),]
@@ -352,6 +322,10 @@ p <- p + scale_y_continuous(limits = c(0, 1),
                             labels=c("0","1/4","1/3", "1/2","2/3","3/4","1"))
 p
 ```
+
+
+
+
 
 
 
@@ -666,44 +640,6 @@ par(mar=c(5,4,4,2))
 ```
 
 
-
-## A panel of samples
-
-
-```{r, fig.height=3}
-
-barplot(sort(sums[1,], decreasing = TRUE), las=3)
-
-barplot(sort(apply(ad1, MARGIN=2, function(x){sum(!is.na(x))}), decreasing = TRUE), las=3)
-#plot(sums[1,], apply(ad1, MARGIN=2, function(x){sum(!is.na(x))}))
-```
-
-
-```{r}
-
-knitr::kable(sums[,1:9])
-knitr::kable(sums[,10:18])
-
-
-#pdf('pinfsc50_hists.pdf', width=8, height=8)
-
-par(mfrow = c(6,3))
-par(mar=c(2,2,2,0))
-
-for(i in 1:18){
-  hist(ad2[,i], breaks = seq(0,1,by=0.02), col = "#808080", xaxt="n", main="", xlab="", ylab="")
-  hist(ad1[,i], breaks = seq(0,1,by=0.02), col = "#C0C0C0", add = TRUE)
-  axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1), labels=c(0,"1/4","1/3","1/2","1/3","3/4",1))
-  title( main = colnames(ad1)[i])
-  abline(h=seq(0,40,by=5) * 10, col="#80808088")
-  abline(h=seq(0,10,by=2), col="#80808088", lty=2)
-}
-
-#dev.off()
-
-par(mfrow = c(1,1))
-par(mar=c(5,4,4,2))
-```
 
 
 
