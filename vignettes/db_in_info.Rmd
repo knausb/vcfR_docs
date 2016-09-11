@@ -23,7 +23,12 @@ R Markdown extends Markdown to include R code which is executed when the documen
 At the present, GitHub will compile the Markdown, but not the R.
 To view the R you will need to compile this document locally.
 If you are using R Studio you can use the 'Knit' button.
+Alternatively, from the command line you should be able to use the following.
 
+
+```{r, eval=FALSE}
+rmarkdown::render('myFile.Rmd')
+```
 
 
 ## Background
@@ -167,9 +172,10 @@ unique(extract_info_tidy(vcf)$DB)
 ## Session 
 
 
-As a developer I work almost exclusively on the development version of the software. 
+As a developer I work almost exclusively on the development version of the software.
 This means that when I try to troubleshoot an issue raised by a user I need to remember to revert to the version on CRAN.
 Otherwise I may be proposing solutions based on functionality that are not available in the CRAN version.
+If you are receiving a compiled (i.e., *.html file) it may be important to compare your version to the one reported below.
 If you notice anything unusual here, please feel free to contact me.
 
 
