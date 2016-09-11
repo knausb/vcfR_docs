@@ -1,0 +1,178 @@
+---
+title: "DB in the INFO column"
+author: "Brian Knaus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Subset to one chromosome}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Preface
+
+This is a document prepared in 'R Markdown.'
+Markdown is a language to help make simple *.html documents.
+R Markdown extends Markdown to include R code which is executed when the document is compiled.
+At the present, GitHub will compile the Markdown, but not the R.
+To view the R you will need to compile this document locally.
+If you are using R Studio you can use the 'Knit' button.
+
+
+
+## Background
+
+
+A user has contacted me regarding the query of the 'DB' field in the 'INFO' column of the 'fix' slot.
+They have generated their VCF file using Mutect2.
+When they query their data they are returned an `NA` and they feel this may be inappropriate.
+
+
+```{r, eval=FALSE}
+unique(extract_info_tidy(vcf2)$DB)
+NA
+```
+
+
+According to the VCF specification the DB field should contain annotation information associated with a variant.
+This information was presumedly provided when Mutect2 was called.
+This information should come in the form of a 'key, value' pair.
+The VCF specification provides for the inclusion of a key without the value as the user has presented.
+The example meta line from the VCF specification indicates that there are no values for this data.
+This is seen below with the '<NUMBER=0>' in the meta record.
+This appears to be a flag for whether a variant is present in dbSNP and provides no further information.
+We can treat this as such or add a value in our simulation to provide an example for if it were populated.
+
+
+## Exploring the data
+
+
+The example VCF data that comes with vcfR does not include tha 'DB' field.
+But we can use it to explore where it might be if it were.
+
+
+```{r}
+library(vcfR)
+data(vcfR_example)
+head(vcf)
+```
+
+
+The `head()` function summarizes the VCF data.
+The 'INFO' column is suppressed from this view because it is frequently rather long.
+We can view it as follows.
+
+
+```{r}
+head(vcf@fix[,'INFO'])
+```
+
+
+The 'DB' field is not in this data.
+We can validate this as follows.
+
+
+```{r}
+grep('DB', vcf@fix[,'INFO'])
+```
+
+
+We can repeat this with the 'tidy' method as well.
+
+
+```{r}
+unique(extract_info_tidy(vcf)$DB)
+```
+
+
+## Simulated empty data
+
+
+We can simulate some 'DB' data for the purpose of troubleshooting.
+The tidy function queries the meta slot for a definition.
+We'll 'borrow' the meta information from the VCF specification.
+
+
+```{r}
+vcf@fix[,'INFO'] <- paste("DB;", vcf@fix[,'INFO'], sep="")
+vcf@meta[30] <- '##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">'
+```
+
+
+Now that we have a 'DB' record in the 'meta' slot we can query for it.
+
+
+```{r}
+grep('DB', vcf@meta, value = TRUE)
+```
+
+
+And search for it in the 'INFO' column.
+
+
+```{r}
+head(grep('DB', vcf@fix[,'INFO']))
+```
+
+
+We can repeat this with the 'tidy' method as well.
+
+
+```{r}
+unique(extract_info_tidy(vcf)$DB)
+```
+
+
+This provides an example of behaviour encountered when the 'DB' key is present but no values are provided.
+
+
+## Simulated data containing some data
+
+
+As stated above, the 'DB' field does not appear to include a value.
+We can add a value for the purpose of an example.
+We can create an example containing values by populating some of our variants with annotations.
+
+
+```{r}
+data(vcfR_example)
+myDB <- rep('DB', times=nrow(vcf))
+myDB[20:29] <- 'DB=myAnnotation1'
+myDB[50:59] <- 'DB=myAnnotation2'
+vcf@fix[,'INFO'] <- paste(myDB, vcf@fix[,'INFO'], sep=";")
+vcf@meta[30] <- '##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">'
+```
+
+
+```{r}
+head(grep('DB', vcf@fix[,'INFO']))
+```
+
+
+We can repeat this with the 'tidy' method as well.
+
+
+```{r}
+unique(extract_info_tidy(vcf)$DB)
+```
+
+
+
+## Session 
+
+
+As a developer I work almost exclusively on the development version of the software. 
+This means that when I try to troubleshoot an issue raised by a user I need to remember to revert to the version on CRAN.
+Otherwise I may be proposing solutions based on functionality that are not available in the CRAN version.
+If you notice anything unusual here, please feel free to contact me.
+
+
+```{r}
+sessionInfo()
+```
