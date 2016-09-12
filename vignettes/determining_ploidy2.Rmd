@@ -4,7 +4,7 @@ author: "Brian J. Knaus"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Subset to one chromosome}
+  %\VignetteIndexEntry{Determining ploidy 2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
