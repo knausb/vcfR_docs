@@ -1,0 +1,71 @@
+---
+title: "myBin"
+output:
+  html_document:
+    toc: true
+author: Brian J. Knaus
+license: GPL (>= 2)
+tags: Basics
+summary: myBin
+---
+
+
+
+
+```{r, engine='Rcpp'}
+#include <Rcpp.h>
+// [[Rcpp::export]]
+Rcpp::IntegerVector myBinner(Rcpp::NumericVector myVect, float bin_width = 0.2){
+
+  int i = 0;
+  int j = 0;
+  int nbins = 1/bin_width;
+  Rcpp::NumericVector breaks( nbins + 1 );
+  Rcpp::IntegerVector counts(nbins);
+  
+  breaks(0) = 0;
+  for(i=1; i<=nbins; i++){
+    breaks(i) = breaks(i-1) + bin_width;
+  }
+  
+  for(i=0; i<breaks.size(); i++){
+    Rcpp::Rcout << breaks(i) << "\n";
+  }
+  
+  Rcpp::Rcout << "\nBinning!\n\n";
+  
+  for(i=0; i<myVect.size(); i++){
+    
+    j = 0;
+    if( myVect(i) >= breaks(j) & myVect(i) <= breaks(j+1) ){
+      Rcpp::Rcout << "Binned: " <<  myVect(i) << " is >= " << breaks(j) << " & <= " << breaks(j+1) << "\n";
+      counts(j)++;
+    }    
+    for(j=1; j<nbins; j++){
+      if( myVect(i) > breaks(j) & myVect(i) <= breaks(j+1) ){
+        Rcpp::Rcout << "Binned: " <<  myVect(i) << " is > " << breaks(j) << " & <= " << breaks(j+1) << "\n";
+        counts(j)++;
+      }
+    }
+  }
+  
+  return(counts);  
+}
+
+```
+
+
+
+
+```{r}
+set.seed(9)
+#x <- runif(n=4)
+x <- c(0, 0.2, 0.4, 0.8, 1.0)
+myBinner(x)
+
+```
+
+
+
+
+

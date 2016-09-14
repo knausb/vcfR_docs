@@ -94,7 +94,11 @@ par(mar=c(2,2,1,1))
 par(oma=c(1,1,0,0))
 
 for(i in 1:12){
-  hist(allele2[,i], breaks = seq(0,1e3,by=1), xlim=c(0,100), col=8, main="", xlab="", ylab="")
+  tmp <- allele2[,i]
+  tmp <- tmp[ tmp > 0 ]
+  hist(tmp, breaks = seq(0,1e3,by=1), xlim=c(0,100), 
+#       ylim=c(0,1000),
+       col=8, main="", xlab="", ylab="")
   title(main = colnames(allele1)[i])
 }
 title(xlab = "Depth", line=0, outer = TRUE, font=2)
@@ -112,7 +116,7 @@ par(oma=c(0,0,0,0))
 
 ```{r}
 # Filter on depth quantiles.
-sums <- apply(allele1, MARGIN=2, quantile, probs=c(0.15, 0.95), na.rm=TRUE)
+sums <- apply(allele1, MARGIN=2, quantile, probs=c(0.1, 0.9), na.rm=TRUE)
 # Allele 1
 dp2 <- sweep(allele1, MARGIN=2, FUN = "-", sums[1,])
 #allele1[dp2 < 0] <- NA

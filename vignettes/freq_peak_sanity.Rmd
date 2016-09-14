@@ -1,0 +1,173 @@
+---
+title: "freq_peak sanity check"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Determining ploidy 3}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.align = 'center')
+knitr::opts_chunk$set(fig.width = 8)
+knitr::opts_chunk$set(fig.height = 8)
+```
+
+
+
+
+## Input data
+
+
+```{r}
+library(vcfR)
+library(pinfsc50)
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+vcf
+```
+
+
+## Depth filtering
+
+
+```{r}
+ad <- extract.gt(vcf, element = 'AD')
+allele1 <- masplit(ad, record = 1)
+allele2 <- masplit(ad, record = 2)
+# Filter on depth quantiles.
+sums <- apply(allele1, MARGIN=2, quantile, probs=c(0.1, 0.9), na.rm=TRUE)
+# Allele 1
+dp2 <- sweep(allele1, MARGIN=2, FUN = "-", sums[1,])
+#allele1[dp2 < 0] <- NA
+vcf@gt[,-1][ dp2 < 0 & !is.na(vcf@gt[,-1]) ] <- NA
+dp2 <- sweep(allele1, MARGIN=2, FUN = "-", sums[2,])
+#allele1[dp2 > 0] <- NA
+vcf@gt[,-1][dp2 > 0] <- NA
+# Allele 2
+dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[1,])
+vcf@gt[,-1][ dp2 < 0 & !is.na(vcf@gt[,-1]) ] <- NA
+dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[2,])
+vcf@gt[,-1][dp2 > 0] <- NA
+```
+
+
+## Omit homozygotes
+
+
+```{r}
+# Censor homozygotes.
+gt <- extract.gt(vcf, element = 'GT')
+hets <- is_het(gt)
+is.na( vcf@gt[,-1][ !hets ] ) <- TRUE
+```
+
+
+## Peaks
+
+
+```{r}
+# Extract allele depths
+ad <- extract.gt(vcf, element = 'AD')
+allele1 <- masplit(ad, record = 1)
+allele2 <- masplit(ad, record = 2)
+ad1 <- allele1 / (allele1 + allele2)
+ad2 <- allele2 / (allele1 + allele2)
+
+# Find peaks
+freq1 <- ad1/(ad1+ad2)
+freq2 <- ad2/(ad1+ad2)
+winsize <- 2e5
+myPeaks1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize)
+myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, count = TRUE)
+is.na(myPeaks1$peaks[myCounts1$peaks < 20]) <- TRUE
+myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, lhs = FALSE)
+myCounts2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, count = TRUE)
+is.na(myPeaks2$peaks[myCounts2$peaks < 20]) <- TRUE
+```
+
+
+
+## Checks
+
+
+
+```{r}
+par(mfrow=c(2,2))
+par(mar=c(2,2,1,1))
+par(oma=c(1,1,0,0))
+
+mySample <- "BL2009P4_us23"
+for(i in 1:4){
+  hist(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ],
+       breaks = seq(0,1,by=0.02), xlim=c(0,1), col=8, main = "", xaxt='n')
+  axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
+     labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=1)
+  abline(v=myPeaks1$peaks[i,mySample], col=2)
+#  if(i==2){ title(main=mySample) }
+}
+
+par(mfrow=c(1,1))
+par(mar=c(5,4,4,2))
+par(oma=c(0,0,0,0))
+
+
+i <- 1
+
+
+
+```
+
+
+```{r}
+detach(package:vcfR, unload = TRUE)
+library(vcfR)
+```
+
+
+
+```{r}
+
+i <- 1
+i <- 2
+
+
+myFreqs <- freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ]
+myFreqs <- na.omit(myFreqs)
+
+myHist <- hist(myFreqs, breaks = seq(0,1,by=0.02), 
+               col=8, main = "", xaxt='n')
+#axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
+#     labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=1)
+axis(side=1, at=seq(0,1,by=0.02), las=3)
+
+abline(v=myPeaks1$peaks[i,mySample], col=2)
+
+
+#myFreqs <- freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ]
+
+myPeaks3 <- freq_peak(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample, drop = FALSE ],
+                      getPOS(vcf)[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'] ],
+                      winsize = winsize, lhs = FALSE)
+
+cbind(myHist$counts, myHist$mids, t(tmp1))
+
+# hist way
+length(myFreqs[ myFreqs > 0.48 & myFreqs <= 0.5])
+length(myFreqs[ myFreqs > 0.5 & myFreqs <= 0.52])
+
+# My way.
+length(myFreqs[ myFreqs >= 0.48 & myFreqs < 0.5])
+length(myFreqs[ myFreqs >= 0.5 & myFreqs < 0.52])
+
+#freq_peak(matrix(myFreqs, ncol=1) )
+
+```
+
+
+
