@@ -82,4 +82,43 @@ myHist <- hist(x, plot = FALSE, breaks = seq(0,1,by=binWidth))
 
 
 
+```{r, engine='Rcpp'}
+#include <Rcpp.h>
+// [[Rcpp::export]]
+void myFunction( double bin_width = 0.2 ){
+  int nbins = 1/bin_width;
+  int i = 0;
+  
+  Rcpp::NumericVector query(1);
+//  query(0) = 0.1;
+//  query(0) = 0.2;
+  query(0) = 0.4;
 
+  Rcpp::NumericVector breaks( nbins + 1 );
+  breaks(0) = 0;
+  for(i=1; i<breaks.size(); i++){
+    breaks(i) = breaks(i-1) + bin_width;
+  }
+  
+  Rcpp::Rcout << "Testing: \n";
+  
+  for(i=0; i < breaks.size() - 1; i++){
+    if( query(0) > breaks(i) & query(0) <= breaks(i+1) ){
+      Rcpp::Rcout << "Binned: " << query(0) << " is > " << breaks(i) << " and <= " << breaks(i+1) << "\n";
+    }
+  }
+  
+  
+}
+
+```
+
+
+
+```{r}
+myFunction( bin_width = 0.2)
+myFunction( bin_width = 0.1)
+myFunction( bin_width = 0.05)
+myFunction( bin_width = 0.02)
+myFunction( bin_width = 0.01)
+```
