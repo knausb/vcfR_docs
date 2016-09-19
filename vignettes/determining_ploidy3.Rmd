@@ -146,8 +146,9 @@ ad1 <- allele1 / (allele1 + allele2)
 ad2 <- allele2 / (allele1 + allele2)
 
 # Parameters
-winsize <- 1e5
-#winsize <- 2e5
+#winsize <- 1e5
+#
+winsize <- 2e5
 #bin_width <- 0.1
 #bin_width <- 0.05
 #bin_width <- 0.025

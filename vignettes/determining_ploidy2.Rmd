@@ -84,9 +84,22 @@ Despite the specification of diploidy, the allele depth information can include 
 
 ```{r}
 #knitr::kable(ad[grep("[^0],[^0],[^0]", ad[,'DDR7602']),1:4])
-knitr::kable(ad[grep("[^0],[^0],[^0]", ad[,'P13626']),c(2:4,12)])
+knitr::kable(ad[grep("[^0],[^0],[^0]", ad[,'P13626'])[1:6],c(2:3,12)])
 ```
 
+
+This can be seen in the VCF data along with the genotypes as well.
+
+
+```{r}
+#knitr::kable(vcf@gt[grep("[^0],[^0],[^0]", ad[,'P13626']),c(4:5,13)])
+knitr::kable(vcf@gt[grep("[^0],[^0],[^0]", ad[,'P13626'])[1:6],c(3:4,13)])
+```
+
+
+The genotypes are reported as diploid genotypes because this was specified as an argument for the variant caller.
+Despite this specification, we can see that more than two alleles can be observed for a sample at a variant.
+Here we've searched the sample P13626 for teh presented example.
 
 
 
