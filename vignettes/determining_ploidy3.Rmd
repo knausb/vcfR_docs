@@ -398,6 +398,11 @@ par(mfrow=c(1,1))
 
 ## Most abundant allele
 
+```{r, fig.height=3, echo=FALSE, eval=TRUE}
+knitr::kable(myPeaks1$wins)
+```
+
+
 
 ```{r, fig.height=3, echo=FALSE, eval=TRUE}
 

@@ -72,10 +72,20 @@ is.na( vcf@gt[,-1][ !hets ] ) <- TRUE
 
 
 ```{r}
+# Window
+#POS <- getPOS(vcf)
+#vcf <- vcf[ POS >= 15813 & POS < 1e5, ]
+#vcf <- vcf[15813:19612,]
+#mySample <- "IN2009T1_us22"
+
+
 # Extract allele depths
 ad <- extract.gt(vcf, element = 'AD')
+#allele1 <- masplit(ad[,mySample, drop = FALSE], record = 1)
+#allele2 <- masplit(ad[,mySample, drop = FALSE], record = 2)
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
+
 ad1 <- allele1 / (allele1 + allele2)
 ad2 <- allele2 / (allele1 + allele2)
 
@@ -155,7 +165,9 @@ myPeaks3 <- freq_peak(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_r
                       getPOS(vcf)[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'] ],
                       winsize = winsize, lhs = FALSE)
 
-cbind(myHist$counts, myHist$mids, t(tmp1))
+
+# Get tmp1 from compiled dput-like output.
+#cbind(myHist$counts, myHist$mids, t(tmp1))
 
 # hist way
 length(myFreqs[ myFreqs > 0.48 & myFreqs <= 0.5])
