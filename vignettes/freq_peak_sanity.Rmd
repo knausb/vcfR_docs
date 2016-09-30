@@ -93,7 +93,27 @@ ad2 <- allele2 / (allele1 + allele2)
 freq1 <- ad1/(ad1+ad2)
 freq2 <- ad2/(ad1+ad2)
 winsize <- 2e5
-myPeaks1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize)
+```
+
+
+Get peaks
+
+
+```{r peaks}
+#rows <- 21216:22031
+samp <- 'DDR7602'
+
+#
+freq1[, samp, drop=FALSE]
+
+
+detach(package:vcfR, unload = TRUE)
+library(vcfR)
+
+myPeaks1 <- freq_peak(freq1[, samp, drop=FALSE], getPOS(vcf), winsize = winsize)
+
+
+
 myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, count = TRUE)
 is.na(myPeaks1$peaks[myCounts1$peaks < 20]) <- TRUE
 myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, lhs = FALSE)
