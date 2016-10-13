@@ -24,6 +24,7 @@ knitr::opts_chunk$set(fig.height = 8)
 
 
 ```{r}
+rm(list = ls())
 library(vcfR)
 library(pinfsc50)
 vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
@@ -102,23 +103,54 @@ Get peaks
 ```{r peaks}
 #rows <- 21216:22031
 samp <- 'DDR7602'
+samp <- 'IN2009T1_us22'
 
-#
-freq1[, samp, drop=FALSE]
+#freq1[, samp, drop=FALSE]
 
 
 detach(package:vcfR, unload = TRUE)
 library(vcfR)
 
-myPeaks1 <- freq_peak(freq1[, samp, drop=FALSE], getPOS(vcf), winsize = winsize)
+# win <- 
+
+myMat <- matrix(runif(9,0,1))
+myMat[2,1] <- NA
+myPeaks1 <- freq_peak(myMat, 1:nrow(myMat), winsize = winsize)
+colnames(myMat) <- 'DDR7602'
+rownames(myMat) <- paste("Var", 1:nrow(myMat), sep="")
+myMat
+
+myPeaks1 <- freq_peak(myMat, 1:nrow(myMat), winsize = winsize)
+
+
+max_row <- 1130
+max_row <- 1128
+max_row <- 1127
+max_row <- nrow(freq1)
+
+
+myPeaks1 <- freq_peak(freq1[1:max_row, samp, drop=FALSE], getPOS(vcf)[1:max_row], winsize = winsize)
 
 
 
-myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, count = TRUE)
-is.na(myPeaks1$peaks[myCounts1$peaks < 20]) <- TRUE
-myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, lhs = FALSE)
-myCounts2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, count = TRUE)
-is.na(myPeaks2$peaks[myCounts2$peaks < 20]) <- TRUE
+par(mfrow=c(2,1))
+
+hist(freq1[, samp, drop=FALSE], breaks=seq(0,1,by=0.02), col="#C0C0C0")
+abline(v=myPeaks1$peaks[4,1], col=2)
+
+
+barplot(height=win[,4], width=0.02,  space = 0, horiz = F, add = FALSE, col="#A6CEE3")
+axis(side=1)
+abline(v=myPeaks1$peaks[4,1], col=2)
+
+par(mfrow=c(1,1))
+
+
+#myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, count = TRUE)
+#is.na(myPeaks1$peaks[myCounts1$peaks < 20]) <- TRUE
+#myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, lhs = FALSE)
+#myCounts2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, count = TRUE)
+#is.na(myPeaks2$peaks[myCounts2$peaks < 20]) <- TRUE
 ```
 
 
