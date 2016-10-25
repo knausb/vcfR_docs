@@ -18,7 +18,7 @@ knitr::opts_chunk$set(fig.height = 8)
 ```
 
 
-Creating histograms of allele balance can provide a quick perspective on teh quality of a sequenced genome as well as insights into whether there may be ploidy variation within an individual.
+Creating histograms of allele balance can provide a quick perspective on the quality of a sequenced genome as well as insights into whether there may be ploidy variation within an individual.
 The creation of these plots is covered elsewhere.
 Here I demonstrate how to automate this process over all samples from a VCF file.
 
