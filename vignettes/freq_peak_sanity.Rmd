@@ -4,7 +4,7 @@ author: "Brian J. Knaus"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Determining ploidy 3}
+  %\VignetteIndexEntry{freq_peak_sanity}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,6 +15,8 @@ vignette: >
 knitr::opts_chunk$set(fig.align = 'center')
 knitr::opts_chunk$set(fig.width = 8)
 knitr::opts_chunk$set(fig.height = 8)
+#
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
@@ -23,24 +25,66 @@ knitr::opts_chunk$set(fig.height = 8)
 ## Input data
 
 
+Data import is performed similar to other examples.
+Here we use the pinfsc50 example dataset.
+
+
 ```{r}
-rm(list = ls())
+# Load libraries
 library(vcfR)
 library(pinfsc50)
+
+# Determine file locations
 vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
                         package = "pinfsc50")
+
+# Read data into memory
 vcf <- read.vcfR(vcf_file, verbose = FALSE)
 vcf
 ```
 
 
-## Depth filtering
+## Extract the alleles and create frequencies
+
+
+Our GATK derived VCF data contains information on how many times each allele was sequenced (i.e., observed).
+We can divide this count data by the total sequence depth in order to create a frequency.
+I've referred to this as 'allele balance' in an attempt to distinguish it from 'allele frequency' which is used in population genetics to refer to the frequency an allele is observed in a population.
+
 
 
 ```{r}
 ad <- extract.gt(vcf, element = 'AD')
+
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
+
+ad1 <- allele1 / (allele1 + allele2)
+ad2 <- allele2 / (allele1 + allele2)
+```
+
+
+
+## Find peaks of density
+
+
+Our method for determinint allele balance is based on binning the data as one would in a histogram and then identifying the bin with the greatest density.
+This is the modal frequency value (after binning).
+In order to improved our estimate in this 'noisy' data a number of steps are perfomed.
+We use the abundance of the most common allele to create a confidence interval for coverage in each sample.
+Here we use the 0.10 and 0.90 to remove variants with the 10% lowest sequence coverage and the 90% highest sequence coverage.
+We then subset the data to only heterozygous positions.
+After the quality control steps we again extract the counts for how many times each allele was sequenced and calculate our allele balance for the first two most abundant alleles.
+We then choose a bin size which determines how wide or narrow our bins will be.
+And we choose a window size.
+Because this analysis is based on heterozygous positions the appropriate window size will be a function of heterozygosity.
+In order to attain fine scale windowing a small window may be desired.
+However, in order to effectively summarize over a population of variants a large enough window must be chosen to include many variants.
+Lastly, we censor windows with less than 20 variants observed to ensure our windows have a sufficient quantity of data.
+
+
+
+```{r find_peaks}
 # Filter on depth quantiles.
 sums <- apply(allele1, MARGIN=2, quantile, probs=c(0.1, 0.9), na.rm=TRUE)
 # Allele 1
@@ -55,183 +99,114 @@ dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[1,])
 vcf@gt[,-1][ dp2 < 0 & !is.na(vcf@gt[,-1]) ] <- NA
 dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[2,])
 vcf@gt[,-1][dp2 > 0] <- NA
-```
 
-
-## Omit homozygotes
-
-
-```{r}
 # Censor homozygotes.
 gt <- extract.gt(vcf, element = 'GT')
 hets <- is_het(gt)
 is.na( vcf@gt[,-1][ !hets ] ) <- TRUE
-```
-
-
-## Peaks
-
-
-```{r}
-# Window
-#POS <- getPOS(vcf)
-#vcf <- vcf[ POS >= 15813 & POS < 1e5, ]
-#vcf <- vcf[15813:19612,]
-#mySample <- "IN2009T1_us22"
 
 
 # Extract allele depths
 ad <- extract.gt(vcf, element = 'AD')
-#allele1 <- masplit(ad[,mySample, drop = FALSE], record = 1)
-#allele2 <- masplit(ad[,mySample, drop = FALSE], record = 2)
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
-
 ad1 <- allele1 / (allele1 + allele2)
 ad2 <- allele2 / (allele1 + allele2)
+
+# Parameters
+#winsize <- 1e5
+#
+winsize <- 2e5
+#bin_width <- 0.1
+#bin_width <- 0.05
+#bin_width <- 0.025
+#
+bin_width <- 0.02
+#bin_width <- 0.01
+
 
 # Find peaks
 freq1 <- ad1/(ad1+ad2)
 freq2 <- ad2/(ad1+ad2)
-winsize <- 2e5
-```
-
-
-Get peaks
-
-
-```{r peaks}
-#rows <- 21216:22031
-samp <- 'DDR7602'
-samp <- 'IN2009T1_us22'
-
-#freq1[, samp, drop=FALSE]
-
-
-detach(package:vcfR, unload = TRUE)
-library(vcfR)
-
-# win <- 
-
-myMat <- matrix(runif(9,0,1))
-myMat[2,1] <- NA
-myPeaks1 <- freq_peak(myMat, 1:nrow(myMat), winsize = winsize)
-colnames(myMat) <- 'DDR7602'
-rownames(myMat) <- paste("Var", 1:nrow(myMat), sep="")
-myMat
-
-myPeaks1 <- freq_peak(myMat, 1:nrow(myMat), winsize = winsize)
-
-
-max_row <- 1130
-max_row <- 1128
-max_row <- 1127
-max_row <- nrow(freq1)
-
-
-myPeaks1 <- freq_peak(freq1[1:max_row, samp, drop=FALSE], getPOS(vcf)[1:max_row], winsize = winsize)
-
-
-
-par(mfrow=c(2,1))
-
-hist(freq1[, samp, drop=FALSE], breaks=seq(0,1,by=0.02), col="#C0C0C0")
-abline(v=myPeaks1$peaks[4,1], col=2)
-
-
-barplot(height=win[,4], width=0.02,  space = 0, horiz = F, add = FALSE, col="#A6CEE3")
-axis(side=1)
-abline(v=myPeaks1$peaks[4,1], col=2)
-
-par(mfrow=c(1,1))
-
-
-#myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, count = TRUE)
-#is.na(myPeaks1$peaks[myCounts1$peaks < 20]) <- TRUE
-#myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, lhs = FALSE)
-#myCounts2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, count = TRUE)
-#is.na(myPeaks2$peaks[myCounts2$peaks < 20]) <- TRUE
+myPeaks1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, bin_width = bin_width)
+#myCounts1 <- freq_peak(freq1, getPOS(vcf), winsize = winsize, bin_width = bin_width, count = TRUE)
+is.na(myPeaks1$peaks[myPeaks1$counts < 20]) <- TRUE
+myPeaks2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, bin_width = bin_width, lhs = FALSE)
+#myCounts2 <- freq_peak(freq2, getPOS(vcf), winsize = winsize, bin_width = bin_width, count = TRUE)
+is.na(myPeaks2$peaks[myPeaks2$counts < 20]) <- TRUE
 ```
 
 
 
-## Checks
+## Peak determination
+
+
+The function `freq_peak()` returns a list containing three matrices.
+One containing the window information, one containing the value of the bin with the greatest quantity of data and a  matrix containing the count of variants observed in each window.
+The beginning of the matrix of window information is displayed below.
+
+
+```{r, fig.height=3, eval=TRUE}
+knitr::kable(myPeaks1$wins)
+```
+
+
+This table demonstrates the several coordinate systems we now have.
+The 200 kbp windows are genomic coordinates.
+The VCF data only have data for the variable positions, so it has a different coordinate system.
+Columns three and four report the row numbers for teh VCF data that include variants that are located within the genomic window.
+The last two columns report the genomic position of the first and last variant in each window.
+
+
+The matrix that contains our peaks can be compared to histograms in order to validate our calls.
+Below is a series of histograms prepared from windows of our data.
+A red line is drawn at our estimate of allele balance for each window.
+Green lines are also drawn at critical values that can be used to bin our allele balances into ploidies.
 
 
 
-```{r}
-par(mfrow=c(2,2))
+```{r, fig.height=3, eval=TRUE}
+
+par(mfrow=c(1,2))
 par(mar=c(2,2,1,1))
-par(oma=c(1,1,0,0))
+par(oma=c(1,1,1,0))
 
-mySample <- "BL2009P4_us23"
-for(i in 1:4){
-  hist(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ],
-       breaks = seq(0,1,by=0.02), xlim=c(0,1), col=8, main = "", xaxt='n')
-  axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
-     labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=1)
-  abline(v=myPeaks1$peaks[i,mySample], col=2)
-#  if(i==2){ title(main=mySample) }
+critical <- 1/4 - (1/3-1/4)/2
+critical <- c(critical, 1/4 + (1/3-1/4)/2)
+critical <- c(critical, 1/2 - (2/3 - 1/2)/2)
+critical <- c(critical, 1/2 + (2/3 - 1/2)/2)
+critical <- c(critical, 3/4 - (1/3-1/4)/2)
+critical <- c(critical, 3/4 + (1/3-1/4)/2)
+
+
+for( j in 1:ncol(freq1) ){
+mySample <- colnames(freq1)[j]
+
+  for( i in 1:nrow(myPeaks1$wins) ){
+    hist(freq2[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ],
+         breaks = seq(0,1,by=bin_width), xlim=c(0,1), col=8, main = "", xaxt='n')
+    axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
+         labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=3)
+    abline(v=myPeaks2$peaks[i,mySample], col=2, lwd=2)
+    abline(v=critical, col="#228B22")
+    
+    hist(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ],
+         breaks = seq(0,1,by=bin_width), xlim=c(0,1), col=8, main = "", xaxt='n')
+    axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
+         labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=3)
+    abline(v=myPeaks1$peaks[i,mySample], col=2, lwd=2)
+    abline(v=critical, col="#228B22")
+    
+    mtext(paste("Window", i), side=4)
+    title(main=mySample, outer = TRUE)
+#    title(main=rownames(myPeaks1$wins)[i], outer = TRUE, line = -1)
+  }
 }
+
 
 par(mfrow=c(1,1))
 par(mar=c(5,4,4,2))
 par(oma=c(0,0,0,0))
-
-
-i <- 1
-
-
-
 ```
-
-
-```{r}
-detach(package:vcfR, unload = TRUE)
-library(vcfR)
-```
-
-
-
-```{r}
-
-i <- 1
-i <- 2
-
-
-myFreqs <- freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ]
-myFreqs <- na.omit(myFreqs)
-
-myHist <- hist(myFreqs, breaks = seq(0,1,by=0.02), 
-               col=8, main = "", xaxt='n')
-#axis(side=1, at=c(0,0.25,0.333,0.5,0.666,0.75,1),
-#     labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=1)
-axis(side=1, at=seq(0,1,by=0.02), las=3)
-
-abline(v=myPeaks1$peaks[i,mySample], col=2)
-
-
-#myFreqs <- freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample ]
-
-myPeaks3 <- freq_peak(freq1[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'], mySample, drop = FALSE ],
-                      getPOS(vcf)[ myPeaks1$wins[i,'START_row']:myPeaks1$wins[i,'END_row'] ],
-                      winsize = winsize, lhs = FALSE)
-
-
-# Get tmp1 from compiled dput-like output.
-#cbind(myHist$counts, myHist$mids, t(tmp1))
-
-# hist way
-length(myFreqs[ myFreqs > 0.48 & myFreqs <= 0.5])
-length(myFreqs[ myFreqs > 0.5 & myFreqs <= 0.52])
-
-# My way.
-length(myFreqs[ myFreqs >= 0.48 & myFreqs < 0.5])
-length(myFreqs[ myFreqs >= 0.5 & myFreqs < 0.52])
-
-#freq_peak(matrix(myFreqs, ncol=1) )
-
-```
-
 
 
