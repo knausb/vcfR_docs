@@ -106,7 +106,6 @@ is.na(myPeaks2$peaks[myPeaks2$counts < 20]) <- TRUE
 ## Plot
 
 
-
 ```{r}
 library(RColorBrewer)
 col1 <- seq(1,ncol(ad2)*2, by=2) %% 8
@@ -124,6 +123,27 @@ for( i in 1:ncol(freq1) ){
   axis(side=2, at=c(0,0.25,0.333,0.5,0.666,0.75,1), 
        labels=c(0,'1/4','1/3','1/2','2/3','3/4',1), las=1)
   abline(h=c(0.25,0.333,0.5,0.666,0.75), col=8)
+  
+  bph <- myPeaks1$counts[,mySample]/sum(myPeaks1$counts[,mySample])
+#  barplot(bph, width=winsize, space = 0,
+#          names.arg = NA, col = c('#C0C0C0', '#808080'), border = NA, add=TRUE, yaxt='n')
+  rect(xleft = myPeaks1$wins[,'START'], ybottom = rep(0, times = nrow(myPeaks1$wins)),
+       xright = myPeaks1$wins[,'END'], ytop = bph, col = c('#C0C0C0', '#808080'), border = NA)
+
+  bph <- 1 - myPeaks2$counts[,mySample]/sum(myPeaks2$counts[,mySample])
+  rect(xleft = myPeaks1$wins[,'START'], ybottom = bph,
+       xright = myPeaks1$wins[,'END'], ytop = rep(1, times = nrow(myPeaks2$wins)),
+       col = c('#C0C0C0', '#808080'), border = NA)
+  
+  myMid <- (myPeaks2$wins[nrow(myPeaks2$wins),'END'] - myPeaks2$wins[1,'START'])/2
+  myMu <- format(mean(myPeaks2$counts[,mySample]), digits = 4)
+  text( x = myMid, y = 0, adj = c(1, 0), bquote( mu == .(myMu)), font = 2 )
+  
+  myMid <- (myPeaks1$wins[nrow(myPeaks1$wins),'END'] - myPeaks1$wins[1,'START'])/2
+  myMu <- format(mean(myPeaks1$counts[,mySample]), digits = 4)
+  text( x = myMid, y = 1, adj = c(1, 1), bquote( mu == .(myMu)), font = 2 )
+  
+  
   points(getPOS(vcf), freq1[,mySample], pch = 20, col= paste(brewer.pal(n=12, name = "Paired")[ col1[i] ], alpha, sep="") )
   points(getPOS(vcf), freq2[,mySample], pch = 20, col= paste(brewer.pal(n=12, name = "Paired")[ col2[i] ], alpha, sep="") )
   segments(x0=myPeaks1$wins[,'START_pos'], y0=myPeaks1$peaks[,mySample],
@@ -137,7 +157,13 @@ for( i in 1:ncol(freq1) ){
   par(mar=c(5,1,4,2))
   barplot(height=bp1$counts, width=0.02,  space = 0, horiz = T, add = FALSE, col=brewer.pal(n=12, name = "Paired")[ col1[i] ])
   barplot(height=bp2$counts, width=0.02,  space = 0, horiz = T, add = TRUE, col=brewer.pal(n=12, name = "Paired")[ col2[i] ])
+  
+
 }
 
 
 ```
+
+
+
+
