@@ -47,8 +47,6 @@ gt <- extract.gt(vcf, element = "GT")
 ad <- extract.gt(vcf, element = "AD")
 allele1 <- masplit(ad, record = 1)
 allele2 <- masplit(ad, record = 2)
-
-
 ```
 
 
@@ -59,15 +57,17 @@ mySample <- 1
 allele.df <- as.data.frame(allele1[,mySample] + allele2[,mySample])
 names(allele.df) <- "sum"
 allele.df$ratio <- allele1[,mySample]/allele.df$sum
-
-allele.m <- cbind(allele1[,mySample] + allele2[,mySample], 
-                  (allele1[,mySample]/(allele1[,mySample] + allele2[,mySample])),
-                  gt[,mySample]
-)
+allele.df$gt <- as.numeric(as.factor(gt[,mySample]))
 
 
-plot( allele1[,mySample] + allele2[,mySample], allele1[,mySample]/(allele1[,mySample] + allele2[,mySample]),
-      col = as.numeric(gt[,mySample]) )
+library(RColorBrewer)
+
+palette( paste(brewer.pal(name = "Dark2", n=8), "44", sep = "") )
+
+
+plot(allele.df$sum, jitter(allele.df$ratio,amount = 0.002), col=allele.df$gt, pch = 20)
+
+palette("default")
 
 
 ```
