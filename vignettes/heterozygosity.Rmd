@@ -1,0 +1,102 @@
+---
+title: "Heterozygosity"
+author: "Brian J. Knaus"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Heterozygosity}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.align = 'center')
+knitr::opts_chunk$set(fig.width = 8)
+knitr::opts_chunk$set(fig.height = 6)
+```
+
+
+Heterozygosity is one of the first perspectives on an individuals genetic constitution.
+
+
+## Data input
+
+
+```{r}
+# Load libraries
+library(vcfR)
+library(pinfsc50)
+
+# Determine file locations
+vcf_file <- system.file("extdata", "pinf_sc50.vcf.gz",
+                        package = "pinfsc50")
+
+# Read data into memory
+vcf <- read.vcfR(vcf_file, verbose = FALSE)
+vcf
+```
+
+
+## Process data
+
+```{r}
+# Extract depths
+dp <- extract.gt(vcf, element = 'DP', as.numeric = TRUE)
+mudp <- apply(dp, MARGIN = 2, mean, na.rm = TRUE)
+
+ad <- extract.gt(vcf, element = 'AD')
+
+allele1 <- masplit(ad, record = 1)
+allele2 <- masplit(ad, record = 2)
+
+ad1 <- allele1 / (allele1 + allele2)
+ad2 <- allele2 / (allele1 + allele2)
+
+# Filter on depth quantiles.
+sums <- apply(allele1, MARGIN=2, quantile, probs=c(0.1, 0.9), na.rm=TRUE)
+# Allele 1
+dp2 <- sweep(allele1, MARGIN=2, FUN = "-", sums[1,])
+#allele1[dp2 < 0] <- NA
+vcf@gt[,-1][ dp2 < 0 & !is.na(vcf@gt[,-1]) ] <- NA
+dp2 <- sweep(allele1, MARGIN=2, FUN = "-", sums[2,])
+#allele1[dp2 > 0] <- NA
+vcf@gt[,-1][dp2 > 0] <- NA
+# Allele 2
+dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[1,])
+vcf@gt[,-1][ dp2 < 0 & !is.na(vcf@gt[,-1]) ] <- NA
+dp2 <- sweep(allele2, MARGIN=2, FUN = "-", sums[2,])
+vcf@gt[,-1][dp2 > 0] <- NA
+
+# Censor homozygotes.
+gt <- extract.gt(vcf, element = 'GT')
+hets <- is_het(gt)
+is.na( vcf@gt[,-1][ !hets ] ) <- TRUE
+
+hettot <- colSums(hets)
+
+
+```
+
+
+
+## Plot
+
+
+
+```{r}
+par(mar=c(8,4,4,2))
+barplot( hettot, las=3 )
+par(mar=c(5,4,4,2))
+```
+
+
+
+```{r}
+lm1 <- lm( hettot ~ mudp )
+plot(mudp, hettot, xlab = "Mean DP", ylab = "Heterozygous positions")
+abline(lm1)
+summary(lm1)
+```
+
