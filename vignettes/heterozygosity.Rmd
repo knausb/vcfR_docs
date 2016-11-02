@@ -39,6 +39,40 @@ vcf
 ```
 
 
+##
+
+
+```{r}
+gt <- extract.gt(vcf, element = "GT")
+ad <- extract.gt(vcf, element = "AD")
+allele1 <- masplit(ad, record = 1)
+allele2 <- masplit(ad, record = 2)
+
+
+```
+
+
+
+```{r}
+
+mySample <- 1
+allele.df <- as.data.frame(allele1[,mySample] + allele2[,mySample])
+names(allele.df) <- "sum"
+allele.df$ratio <- allele1[,mySample]/allele.df$sum
+
+allele.m <- cbind(allele1[,mySample] + allele2[,mySample], 
+                  (allele1[,mySample]/(allele1[,mySample] + allele2[,mySample])),
+                  gt[,mySample]
+)
+
+
+plot( allele1[,mySample] + allele2[,mySample], allele1[,mySample]/(allele1[,mySample] + allele2[,mySample]),
+      col = as.numeric(gt[,mySample]) )
+
+
+```
+
+
 ## Process data
 
 ```{r}
@@ -87,7 +121,13 @@ hettot <- colSums(hets)
 
 ```{r}
 par(mar=c(8,4,4,2))
+
 barplot( hettot, las=3 )
+title( ylab = "Heterozygous positions" )
+
+barplot( mudp, las=3 )
+title( ylab = "Mean depth (DP)" )
+
 par(mar=c(5,4,4,2))
 ```
 
@@ -99,4 +139,10 @@ plot(mudp, hettot, xlab = "Mean DP", ylab = "Heterozygous positions")
 abline(lm1)
 summary(lm1)
 ```
+
+
+
+
+
+
 
